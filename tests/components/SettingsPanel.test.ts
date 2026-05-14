@@ -245,3 +245,51 @@ describe('SettingsPanel – drag-to-reorder warnings', () => {
     }
   })
 })
+
+describe('SettingsPanel – CTA button soft-orange styling (Group 6)', () => {
+  it('6.1a: CTA button has class cta-done', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    const cta = wrapper.find('button.cta-done')
+    expect(cta.exists()).toBe(true)
+  })
+
+  it('6.1b: CTA button text is "✓ 設定完成"', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    const cta = wrapper.find('button.cta-done')
+    expect(cta.text()).toContain('設定完成')
+  })
+
+  it('6.1c: CTA button does NOT have bg-orange class (no solid orange)', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    const cta = wrapper.find('button.cta-done')
+    expect(cta.classes()).not.toContain('bg-orange')
+  })
+
+  it('6.1d: CTA button does NOT have shadow-orange class (no box-shadow)', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    const cta = wrapper.find('button.cta-done')
+    expect(cta.classes()).not.toContain('shadow-orange')
+  })
+})
+
+describe('SettingsPanel – no hint texts (Group 6)', () => {
+  it('6.2: panel text does not contain HMS hint about 設定 30 秒可快速測試', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    expect(wrapper.text()).not.toContain('設定 30 秒可快速測試')
+  })
+
+  it('6.3: panel text does not contain 拖曳左側 warning milestones hint', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    expect(wrapper.text()).not.toContain('拖曳左側')
+  })
+
+  it('6.4: panel text does not contain URL footer hint (所有設定都會即時寫進網址)', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    expect(wrapper.text()).not.toContain('所有設定都會即時寫進網址')
+  })
+
+  it('6.4b: panel text does not contain the URL footer variant (設定會自動寫進網址列)', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    expect(wrapper.text()).not.toContain('設定會自動寫進網址列')
+  })
+})

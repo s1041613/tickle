@@ -162,9 +162,6 @@ function onWarningPreview(warning: Warning) {
           {{ preset.label }}
         </button>
       </div>
-      <div class="text-xs text-muted mt-1.5">
-        💡 設定 30 秒可快速測試，警告里程碑會在剩 20 / 10 秒觸發
-      </div>
     </div>
 
     <div class="flex items-center justify-between px-[1.1rem] py-[0.85rem] bg-bg rounded-[20px] mb-2.5">
@@ -222,14 +219,10 @@ function onWarningPreview(warning: Warning) {
 
     <button
       @click="emit('close')"
-      class="w-full mt-6 py-[1.1rem] border-0 rounded-[20px] text-base font-extrabold cursor-pointer bg-orange text-white shadow-orange active:scale-[0.97] transition-transform"
+      class="cta-done w-full mt-6 border-0 rounded-[20px] text-base cursor-pointer active:scale-[0.97] transition-transform"
     >
       ✓ 設定完成
     </button>
-
-    <div class="mt-4 px-[1.1rem] py-4 bg-[#FFF8E8] rounded-[20px] text-[0.82rem] leading-[1.5] border-l-4 border-yellow text-balance-cjk">
-      💡 設定會自動寫進網址列<br>複製當前 URL，貼到 iPad Safari 就能用，完全一致
-    </div>
   </aside>
 </template>
 
@@ -261,5 +254,18 @@ function onWarningPreview(warning: Warning) {
 .chip.active {
   background: var(--color-orange);
   color: #fff;
+}
+
+.cta-done {
+  padding: 0.85rem;
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
+  font-weight: 700;
+  box-shadow: none;
+  min-height: 44px;
+}
+
+.cta-done:hover {
+  background: #FFD4BC;
 }
 </style>
