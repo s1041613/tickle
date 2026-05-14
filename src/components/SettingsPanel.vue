@@ -214,13 +214,13 @@ function onFinalPreview() {
       <select
         :value="finalSound"
         @change="updateFinal"
-        class="flex-1 px-[1.1rem] py-[0.85rem] border-2 border-transparent bg-bg rounded-[20px] text-base font-semibold text-ink focus:outline-none focus:border-orange focus:bg-white"
+        class="warn-select flex-1 min-w-0 px-[1.1rem] py-[0.85rem] text-base"
       >
         <option v-for="k in soundKeys" :key="k" :value="k">{{ SOUND_LABELS[k] }}</option>
       </select>
       <button
         type="button"
-        class="preview-btn"
+        class="preview-btn shrink-0"
         :class="{ playing: playingId === 'final' }"
         @click="onFinalPreview"
         aria-label="試聽結束音效"
