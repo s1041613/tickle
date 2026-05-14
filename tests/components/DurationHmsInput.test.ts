@@ -82,4 +82,15 @@ describe('DurationHmsInput', () => {
     expect((inputs[1].element as HTMLInputElement).value).toBe('0')
     expect((inputs[2].element as HTMLInputElement).value).toBe('0')
   })
+
+  it('2.G: blur on empty field restores "0" display', async () => {
+    const wrapper = mount(DurationHmsInput, {
+      props: { modelValue: 60 },
+    })
+    const minuteInput = wrapper.findAll('input[type="number"]')[1]
+    const el = minuteInput.element as HTMLInputElement
+    el.value = ''
+    await minuteInput.trigger('blur')
+    expect(el.value).toBe('0')
+  })
 })

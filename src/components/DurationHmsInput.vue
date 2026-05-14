@@ -12,9 +12,19 @@ const secondsRef = computed({
 
 const { h, m, s, setHms } = useDurationHms(secondsRef)
 
+const hDisplay = computed(() => String(h.value))
+const mDisplay = computed(() => String(m.value))
+const sDisplay = computed(() => String(s.value))
+
 function onField(field: 'h' | 'm' | 's', e: Event) {
-  const v = Number((e.target as HTMLInputElement).value)
+  const raw = (e.target as HTMLInputElement).value
+  const v = raw === '' ? 0 : Number(raw)
   setHms({ h: h.value, m: m.value, s: s.value, [field]: v })
+}
+
+function onBlur(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (input.value === '') input.value = '0'
 }
 </script>
 
@@ -23,10 +33,12 @@ function onField(field: 'h' | 'm' | 's', e: Event) {
     <div class="hms-cell">
       <input
         type="number"
+        inputmode="numeric"
         min="0"
         max="23"
-        :value="h"
+        :value="hDisplay"
         @input="onField('h', $event)"
+        @blur="onBlur"
         class="w-full border-0 bg-transparent text-center text-2xl font-bold text-ink outline-none tabular-nums"
       />
       <span class="hms-unit">時</span>
@@ -34,10 +46,12 @@ function onField(field: 'h' | 'm' | 's', e: Event) {
     <div class="hms-cell">
       <input
         type="number"
+        inputmode="numeric"
         min="0"
         max="59"
-        :value="m"
+        :value="mDisplay"
         @input="onField('m', $event)"
+        @blur="onBlur"
         class="w-full border-0 bg-transparent text-center text-2xl font-bold text-ink outline-none tabular-nums"
       />
       <span class="hms-unit">分</span>
@@ -45,10 +59,12 @@ function onField(field: 'h' | 'm' | 's', e: Event) {
     <div class="hms-cell">
       <input
         type="number"
+        inputmode="numeric"
         min="0"
         max="59"
-        :value="s"
+        :value="sDisplay"
         @input="onField('s', $event)"
+        @blur="onBlur"
         class="w-full border-0 bg-transparent text-center text-2xl font-bold text-ink outline-none tabular-nums"
       />
       <span class="hms-unit">秒</span>
