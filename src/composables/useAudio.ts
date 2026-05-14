@@ -66,7 +66,9 @@ function scheduleTone(ctx: AudioContext, now: number, def: OscDef): void {
 export function useAudio() {
   async function ensureAudio(): Promise<void> {
     const ctx = getCtx()
+    console.log('[tickle] ensureAudio start, state =', ctx.state)
     await warmUp(ctx)
+    console.log('[tickle] ensureAudio done, state =', ctx.state)
     unlocked.value = true
   }
 
@@ -76,9 +78,8 @@ export function useAudio() {
     if (ctx.state === 'suspended') {
       void ctx.resume()
     }
-    if (import.meta.env.DEV) {
-      console.log('[tickle] playSound', kind, 'ctx.state =', ctx.state)
-    }
+    // Always log in production too, since iPad debugging needs this.
+    console.log('[tickle] playSound', kind, 'ctx.state =', ctx.state)
     const now = ctx.currentTime
 
     if (kind === 'gong') {
