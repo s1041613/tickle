@@ -2,7 +2,7 @@ import { watch, type Ref } from 'vue'
 import type { Warning, ColorKey, SoundKey } from '../types'
 
 const VALID_COLORS: ColorKey[] = ['yellow', 'orange', 'red']
-const VALID_SOUNDS: SoundKey[] = ['chime', 'bell', 'gong']
+const VALID_SOUNDS: SoundKey[] = ['chime', 'bell', 'gong', 'polite', 'cheer']
 
 function isColor(s: string): s is ColorKey {
   return (VALID_COLORS as string[]).includes(s)

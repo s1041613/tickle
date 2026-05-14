@@ -46,6 +46,20 @@ bigtimer.net 用 `Gong.mp3` + `Tick.mp3` 兩個檔案。我們不用它：
 
 代價：合成的 gong 不如真實鑼聲飽滿。實際使用後評估，如果聲音太單薄再考慮包小體積 mp3。
 
+**例外：`polite` / `cheer` 使用真實錄音**（2026-05-15 翻案）：
+
+| 為什麼這兩個破例 | 詳情 |
+|---|---|
+| 合成鼓掌聲音質弱 | 試過 5 種合成策略（filtered noise burst + noise bed），仍無法產生「演講結束、轟轟烈烈」那種真實感。`mockup-audio/` 留下試聽紀錄 |
+| 版權 OK | Mixkit Sound Effects Free License（免費商用、可 web 散布、不需 attribution、不能單獨 redistribute 但作為 end product 合規）|
+| 不踩 `<audio>` bug | 用 `fetch + AudioContext.decodeAudioData + AudioBufferSourceNode`，跟 gong/bell/chime 共用同一個 unlocked AudioContext。**不是** `<audio>` 元素 |
+| AAC（.m4a）壓縮 | 96kbps AAC 比同 bitrate mp3 音質好，iOS Safari 原生解碼。短版 101KB / 長版 337KB |
+| Lazy preload | 使用者切到 clap 選項時才下載（SettingsPanel `updateWarning` / `updateFinal` 呼叫 `preloadSound`）。URL 載入時若已包含 clap，在 `handleUnlock` 後一次 warm-up |
+
+來源：Mixkit #476（Conference audience clapping strongly, 8.6s）、#478（Ending show audience clapping, 24.5s）。檔案在 `src/assets/audio/`。
+
+其餘 gong/bell/chime 維持合成，不轉檔案 — 那三個合成效果足夠。
+
 ---
 
 ### CSS：為什麼用 Tailwind v4 而不是 v3？
