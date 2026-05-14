@@ -172,7 +172,6 @@ const bodyClass = computed(() => `state-${visualState.value}`)
       @update:repeat="(v) => (repeat = v)"
       @update:warnings="(v) => (warnings = v)"
       @update:final-sound="(v) => (finalSound = v)"
-      @test-final="playSound(finalSound)"
     />
   </div>
 </template>

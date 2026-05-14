@@ -246,6 +246,73 @@ describe('SettingsPanel – drag-to-reorder warnings', () => {
   })
 })
 
+describe('SettingsPanel – final-sound preview button (Group 7)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    mockPlaySound.mockClear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('7.1: final-sound preview is a .preview-btn, not a text link', () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    const btn = wrapper.find('button.preview-btn[aria-label="試聽結束音效"]')
+    expect(btn.exists()).toBe(true)
+    // should NOT have the old text-link class
+    expect(btn.classes()).not.toContain('hover:underline')
+  })
+
+  it('7.2: clicking the preview button calls playSound with finalSound', async () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    const btn = wrapper.find('button.preview-btn[aria-label="試聽結束音效"]')
+    await btn.trigger('click')
+    expect(mockPlaySound).toHaveBeenCalledWith('gong')
+  })
+
+  it('7.3: clicking the preview button adds class "playing" to it', async () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    const btn = wrapper.find('button.preview-btn[aria-label="試聽結束音效"]')
+    await btn.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(btn.classes()).toContain('playing')
+  })
+
+  it('7.4: after 1200ms the playing class is removed', async () => {
+    const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })
+    const btn = wrapper.find('button.preview-btn[aria-label="試聽結束音效"]')
+    await btn.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(btn.classes()).toContain('playing')
+
+    vi.advanceTimersByTime(1200)
+    await wrapper.vm.$nextTick()
+    expect(btn.classes()).not.toContain('playing')
+  })
+
+  it('7.5: clicking final preview while a warning preview is playing cancels the warning animation', async () => {
+    const sampleWarnings: Warning[] = [{ id: 1, at: 60, color: 'yellow', sound: 'chime' }]
+    const wrapper = mount(SettingsPanel, {
+      props: { ...baseProps, warnings: sampleWarnings },
+      ...mountOptions,
+    })
+
+    // Start a warning preview
+    const cards = wrapper.findAllComponents({ name: 'WarningCard' })
+    await cards[0].vm.$emit('preview', sampleWarnings[0])
+    await wrapper.vm.$nextTick()
+    expect(cards[0].props('isPlaying')).toBe(true)
+
+    // Now click the final-sound preview button — warning should stop
+    const btn = wrapper.find('button.preview-btn[aria-label="試聽結束音效"]')
+    await btn.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(cards[0].props('isPlaying')).toBe(false)
+    expect(btn.classes()).toContain('playing')
+  })
+})
+
 describe('SettingsPanel – CTA button soft-orange styling (Group 6)', () => {
   it('6.1a: CTA button has class cta-done', () => {
     const wrapper = mount(SettingsPanel, { props: baseProps, ...mountOptions })

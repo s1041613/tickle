@@ -22,7 +22,6 @@ const emit = defineEmits<{
   'update:repeat': [v: boolean]
   'update:warnings': [v: Warning[]]
   'update:finalSound': [v: SoundKey]
-  testFinal: []
 }>()
 
 const soundKeys = Object.keys(SOUND_LABELS) as SoundKey[]
@@ -128,6 +127,16 @@ function onWarningPreview(warning: Warning) {
     playingTimer = null
   }, 1200)
 }
+
+function onFinalPreview() {
+  playingId.value = 'final'
+  props.playSound(props.finalSound)
+  if (playingTimer != null) clearTimeout(playingTimer)
+  playingTimer = window.setTimeout(() => {
+    playingId.value = null
+    playingTimer = null
+  }, 1200)
+}
 </script>
 
 <template>
@@ -210,10 +219,19 @@ function onWarningPreview(warning: Warning) {
         <option v-for="k in soundKeys" :key="k" :value="k">{{ SOUND_LABELS[k] }}</option>
       </select>
       <button
-        @click="emit('testFinal')"
-        class="bg-transparent border-0 text-orange cursor-pointer font-semibold text-sm px-2 py-2 hover:underline"
+        type="button"
+        class="preview-btn"
+        :class="{ playing: playingId === 'final' }"
+        @click="onFinalPreview"
+        aria-label="試聽結束音效"
       >
-        ▶ 試聽
+        <svg v-if="playingId !== 'final'" viewBox="0 0 12 12">
+          <path d="M3 1 L10 6 L3 11 Z" fill="currentColor" />
+        </svg>
+        <svg v-else viewBox="0 0 12 12">
+          <rect x="3" y="3" width="2" height="6" fill="currentColor" />
+          <rect x="7" y="3" width="2" height="6" fill="currentColor" />
+        </svg>
       </button>
     </div>
 
