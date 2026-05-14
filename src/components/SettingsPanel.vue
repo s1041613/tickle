@@ -214,7 +214,7 @@ function onFinalPreview() {
       <select
         :value="finalSound"
         @change="updateFinal"
-        class="warn-select flex-1 min-w-0"
+        class="warn-select warn-select-sound border-0 rounded-[14px] py-[0.55rem] pl-[0.7rem] pr-[1.4rem] font-semibold text-[0.85rem] cursor-pointer outline-none flex-1 min-w-0"
       >
         <option v-for="k in soundKeys" :key="k" :value="k">{{ SOUND_LABELS[k] }}</option>
       </select>
