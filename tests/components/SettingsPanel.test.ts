@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import SettingsPanel from '../../src/components/SettingsPanel.vue'
+import type { Warning } from '../../src/types'
+
+const mockPlaySound = vi.fn()
 
 const baseProps = {
   open: true,
@@ -8,6 +11,7 @@ const baseProps = {
   repeat: false,
   warnings: [],
   finalSound: 'gong' as const,
+  playSound: mockPlaySound,
 }
 
 const mountOptions = {
@@ -67,5 +71,82 @@ describe('SettingsPanel – preset duration chips', () => {
     const emitted = wrapper.emitted('update:duration') as number[][]
     expect(emitted).toBeTruthy()
     expect(emitted[0][0]).toBe(3600)
+  })
+})
+
+describe('SettingsPanel – warning preview', () => {
+  const sampleWarnings: Warning[] = [
+    { id: 1, at: 60, color: 'yellow', sound: 'chime' },
+    { id: 2, at: 30, color: 'orange', sound: 'bell' },
+  ]
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    mockPlaySound.mockClear()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('4.7/4.8: receiving preview event from WarningCard calls playSound and sets isPlaying on that card', async () => {
+    const wrapper = mount(SettingsPanel, {
+      props: { ...baseProps, warnings: sampleWarnings },
+      ...mountOptions,
+    })
+
+    // Find the first WarningCard and emit preview from it
+    const cards = wrapper.findAllComponents({ name: 'WarningCard' })
+    expect(cards).toHaveLength(2)
+
+    await cards[0].vm.$emit('preview', sampleWarnings[0])
+    await wrapper.vm.$nextTick()
+
+    expect(mockPlaySound).toHaveBeenCalledWith('chime')
+
+    // The first card should now show isPlaying = true
+    expect(cards[0].props('isPlaying')).toBe(true)
+    // The second card should not be playing
+    expect(cards[1].props('isPlaying')).toBe(false)
+  })
+
+  it('4.8: only one card animates at a time — clicking second card stops first', async () => {
+    const wrapper = mount(SettingsPanel, {
+      props: { ...baseProps, warnings: sampleWarnings },
+      ...mountOptions,
+    })
+
+    const cards = wrapper.findAllComponents({ name: 'WarningCard' })
+
+    // Start preview on first card
+    await cards[0].vm.$emit('preview', sampleWarnings[0])
+    await wrapper.vm.$nextTick()
+    expect(cards[0].props('isPlaying')).toBe(true)
+    expect(cards[1].props('isPlaying')).toBe(false)
+
+    // Start preview on second card — first should stop
+    await cards[1].vm.$emit('preview', sampleWarnings[1])
+    await wrapper.vm.$nextTick()
+    expect(cards[0].props('isPlaying')).toBe(false)
+    expect(cards[1].props('isPlaying')).toBe(true)
+  })
+
+  it('4.9: after 1200ms playingId clears and isPlaying returns to false', async () => {
+    const wrapper = mount(SettingsPanel, {
+      props: { ...baseProps, warnings: sampleWarnings },
+      ...mountOptions,
+    })
+
+    const cards = wrapper.findAllComponents({ name: 'WarningCard' })
+
+    await cards[0].vm.$emit('preview', sampleWarnings[0])
+    await wrapper.vm.$nextTick()
+    expect(cards[0].props('isPlaying')).toBe(true)
+
+    // Advance time by 1200ms
+    vi.advanceTimersByTime(1200)
+    await wrapper.vm.$nextTick()
+
+    expect(cards[0].props('isPlaying')).toBe(false)
   })
 })

@@ -166,6 +166,7 @@ const bodyClass = computed(() => `state-${visualState.value}`)
       :repeat="repeat"
       :warnings="warnings"
       :final-sound="finalSound"
+      :play-sound="playSound"
       @close="handlePanelClose"
       @update:duration="(v) => (duration = v)"
       @update:repeat="(v) => (repeat = v)"

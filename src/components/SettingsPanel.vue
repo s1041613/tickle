@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Warning, SoundKey } from '../types'
 import { SOUND_LABELS } from '../types'
 import SectionTag from './SectionTag.vue'
@@ -12,6 +13,7 @@ const props = defineProps<{
   repeat: boolean
   warnings: Warning[]
   finalSound: SoundKey
+  playSound: (kind: SoundKey) => void
 }>()
 
 const emit = defineEmits<{
@@ -33,6 +35,9 @@ const PRESETS = [
   { seconds: 1800, label: '30 分' },
   { seconds: 3600, label: '1 時' },
 ] as const
+
+const playingId = ref<number | 'final' | null>(null)
+let playingTimer: number | null = null
 
 function isActive(presetSeconds: number) {
   return props.duration === presetSeconds
@@ -60,6 +65,16 @@ function addWarning() {
 
 function updateFinal(e: Event) {
   emit('update:finalSound', (e.target as HTMLSelectElement).value as SoundKey)
+}
+
+function onWarningPreview(warning: Warning) {
+  playingId.value = warning.id
+  props.playSound(warning.sound)
+  if (playingTimer != null) clearTimeout(playingTimer)
+  playingTimer = window.setTimeout(() => {
+    playingId.value = null
+    playingTimer = null
+  }, 1200)
 }
 </script>
 
@@ -115,8 +130,10 @@ function updateFinal(e: Event) {
       v-for="w in warnings"
       :key="w.id"
       :warning="w"
+      :is-playing="playingId === w.id"
       @update:warning="updateWarning"
       @delete="deleteWarning"
+      @preview="onWarningPreview"
     />
     <button
       @click="addWarning"
