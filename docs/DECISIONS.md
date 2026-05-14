@@ -60,6 +60,22 @@ bigtimer.net 用 `Gong.mp3` + `Tick.mp3` 兩個檔案。我們不用它：
 
 其餘 gong/bell/chime 維持合成，不轉檔案 — 那三個合成效果足夠。
 
+**第二個破例：`drumGong` 使用 CC0 mp3 樣本**（2026-05-15 同日新增）：
+
+zoe 多輪 A/B 試聽合成 gong vs bigtimer.net 的鑼聲，發現合成的低頻 sine 三層聽起來像 beep 不像鑼。但**仍想保留原合成 gong**（簡潔內斂，適合會議用），所以新增第六個音效 `drumGong`（UI 顯示「🥁 drumGong」），讓使用者選。
+
+| 為什麼這個也破例 | 詳情 |
+|---|---|
+| 合成做不出「敲鑼打鼓」感 | A2 配方需要真實鑼錄音的攻擊瞬間 + 共鳴尾音物理；用 OscillatorNode 試了多輪都不像 |
+| 版權 OK | freesound.org **CC0 / public domain**，連 attribution 都不需要。詳見 `docs/AUDIO_CREDITS.md` |
+| 兩個 buffer 疊播 | D（攻擊）+ C（共鳴）兩個獨立樣本，用 `playDrumGong()` 內部 envelope（D gain 1.3 / C 200ms 後緩入到 0.35 再指數衰減 1.6s + master gain 0.85 防 clip）疊出 A2 配方 |
+| 沿用 polite/cheer 架構 | 共用 `bufferCache` / `bufferLoading` / `loadBuffer()` 機制，新增 `bufferKeysFor()` 把 `drumGong` 展開成兩個 BufferKey (`drumGongC` + `drumGongD`)。`preloadSound('drumGong')` 自動載兩個 |
+| AAC vs MP3 | drumGong 仍用 mp3（freesound 預覽格式），polite/cheer 用 m4a。混用因為來源不同；都被 `decodeAudioData` 處理 |
+
+來源：[freesound #519359](https://freesound.org/people/Logicogonist/sounds/519359/)（Logicogonist, C 共鳴）、[freesound #18654](https://freesound.org/people/nkuitse/sounds/18654/)（nkuitse, D 攻擊）。檔案在 `src/assets/audio/drumGong-C.mp3` / `drumGong-D.mp3`。
+
+實作位置：`src/composables/useAudio.ts` 的 `playDrumGong()` + `bufferKeysFor()`。
+
 ---
 
 ### CSS：為什麼用 Tailwind v4 而不是 v3？

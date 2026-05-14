@@ -9,16 +9,25 @@
 // License) — see DECISIONS.md §1 "exception". They use fetch + decodeAudioData
 // + AudioBufferSourceNode, NOT <audio> elements (which iPad Safari handles
 // poorly under the same Web Audio unlock path).
+//
+// drumGong (鏘鏘) uses two CC0 mp3 samples (freesound.org — see
+// AUDIO_CREDITS.md) layered with an A2 envelope: D = strike, C = resonance.
 import { ref } from 'vue'
 import type { SoundKey } from '../types'
 import politeUrl from '../assets/audio/polite.m4a'
 import cheerUrl from '../assets/audio/cheer.m4a'
+import drumGongCUrl from '../assets/audio/drumGong-C.mp3'
+import drumGongDUrl from '../assets/audio/drumGong-D.mp3'
 
-type BufferKey = Extract<SoundKey, 'polite' | 'cheer'>
+// Internal keys for the buffer cache. SoundKey 'drumGong' expands to two
+// buffer fetches (C resonance + D strike); other buffer-backed sounds map 1:1.
+type BufferKey = 'polite' | 'cheer' | 'drumGongC' | 'drumGongD'
 
 const BUFFER_URLS: Record<BufferKey, string> = {
   polite: politeUrl,
   cheer: cheerUrl,
+  drumGongC: drumGongCUrl,
+  drumGongD: drumGongDUrl,
 }
 
 let audioCtx: AudioContext | null = null
@@ -57,8 +66,13 @@ async function warmUp(ctx: AudioContext): Promise<void> {
   source.start(0)
 }
 
-function isBufferKey(kind: SoundKey): kind is BufferKey {
-  return kind === 'polite' || kind === 'cheer'
+// Map a SoundKey to the buffer keys it needs. Most buffer-backed sounds are
+// 1:1; drumGong needs two (C + D).
+function bufferKeysFor(kind: SoundKey): BufferKey[] {
+  if (kind === 'polite') return ['polite']
+  if (kind === 'cheer') return ['cheer']
+  if (kind === 'drumGong') return ['drumGongC', 'drumGongD']
+  return []
 }
 
 async function loadBuffer(kind: BufferKey): Promise<AudioBuffer> {
@@ -134,7 +148,7 @@ function stopCurrentClap(ctx: AudioContext): void {
   currentClap = null
 }
 
-function playBuffer(ctx: AudioContext, kind: BufferKey): void {
+function playClapBuffer(ctx: AudioContext, kind: 'polite' | 'cheer'): void {
   const buffer = bufferCache.get(kind)
   if (!buffer) {
     // Not loaded yet — kick off a load and fall back to a bell tone so the
@@ -164,6 +178,59 @@ function playBuffer(ctx: AudioContext, kind: BufferKey): void {
   currentClap = { src, gain }
 }
 
+// drumGong A2 recipe — picked after extensive A/B listening against bigtimer.net.
+// D = the strike (sharp attack, gain 1.3), C = the resonance (silent for
+// 200ms, linear fade-in to 0.35 by 400ms, then exponential decay to 1.6s).
+// Master gain 0.85 prevents clipping when peaks overlap.
+// All envelope values stay ≥ 0.0001 per iPad Safari rules (Bug #9).
+function playDrumGong(ctx: AudioContext): void {
+  const C = bufferCache.get('drumGongC')
+  const D = bufferCache.get('drumGongD')
+  if (!C || !D) {
+    // Kick off loads and fall back to bell so user still hears something.
+    void loadBuffer('drumGongC').catch((e) =>
+      console.warn('[tickle] loadBuffer drumGongC failed', e),
+    )
+    void loadBuffer('drumGongD').catch((e) =>
+      console.warn('[tickle] loadBuffer drumGongD failed', e),
+    )
+    console.warn('[tickle] drumGong buffers not ready, falling back to bell')
+    const now = ctx.currentTime
+    scheduleTone(ctx, now, { freq: 880, peak: 0.3, attack: 0.01, duration: 1.2 })
+    return
+  }
+
+  const now = ctx.currentTime
+
+  // Master gain — prevents clipping when D(1.3) + C(0.35) peaks overlap.
+  const master = ctx.createGain()
+  master.gain.value = 0.85
+  master.connect(ctx.destination)
+
+  // D — the strike: full attack, no envelope, gain 1.3.
+  const dSrc = ctx.createBufferSource()
+  dSrc.buffer = D
+  const dGain = ctx.createGain()
+  dGain.gain.value = 1.3
+  dSrc.connect(dGain).connect(master)
+  dSrc.start(now)
+
+  // C — the resonance: silent for 200ms, fade in to 0.35 over 200ms,
+  // hold briefly, then exponential decay to 0.0001 over 1.2s.
+  const cSrc = ctx.createBufferSource()
+  cSrc.buffer = C
+  const cGain = ctx.createGain()
+  const fadeInStart = now + 0.20
+  const fadeInEnd = now + 0.40
+  const fadeOutEnd = now + 1.60
+  cGain.gain.setValueAtTime(0.0001, now)
+  cGain.gain.setValueAtTime(0.0001, fadeInStart)
+  cGain.gain.linearRampToValueAtTime(0.35, fadeInEnd)
+  cGain.gain.exponentialRampToValueAtTime(0.0001, fadeOutEnd)
+  cSrc.connect(cGain).connect(master)
+  cSrc.start(now)
+}
+
 export function useAudio() {
   async function ensureAudio(): Promise<void> {
     const ctx = getCtx()
@@ -173,12 +240,14 @@ export function useAudio() {
     unlocked.value = true
   }
 
-  // Pre-fetch + decode a clap buffer. UI should call this when the user
-  // selects a clap option in a sound dropdown, so the buffer is ready by
-  // the time the warning fires. Safe to call repeatedly (cached).
+  // Pre-fetch + decode buffer(s) for a sound. UI should call this when the
+  // user selects a buffer-backed option in a sound dropdown, so the buffer is
+  // ready by the time the warning fires. Safe to call repeatedly (cached).
   function preloadSound(kind: SoundKey): void {
-    if (!isBufferKey(kind)) return
-    void loadBuffer(kind).catch((e) => console.warn('[tickle] preload failed', kind, e))
+    const keys = bufferKeysFor(kind)
+    keys.forEach((k) => {
+      void loadBuffer(k).catch((e) => console.warn('[tickle] preload failed', k, e))
+    })
   }
 
   function playSound(kind: SoundKey): void {
@@ -190,8 +259,12 @@ export function useAudio() {
     // Always log in production too, since iPad debugging needs this.
     console.log('[tickle] playSound', kind, 'ctx.state =', ctx.state)
 
-    if (isBufferKey(kind)) {
-      playBuffer(ctx, kind)
+    if (kind === 'polite' || kind === 'cheer') {
+      playClapBuffer(ctx, kind)
+      return
+    }
+    if (kind === 'drumGong') {
+      playDrumGong(ctx)
       return
     }
 
