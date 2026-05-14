@@ -39,6 +39,58 @@ const PRESETS = [
 const playingId = ref<number | 'final' | null>(null)
 let playingTimer: number | null = null
 
+const draggingId = ref<number | null>(null)
+const dropTargetId = ref<number | null>(null)
+
+function onCardDragStart(e: DragEvent, id: number) {
+  draggingId.value = id
+  if (e.dataTransfer) {
+    e.dataTransfer.setData('warning-id', String(id))
+    e.dataTransfer.effectAllowed = 'move'
+  }
+}
+
+function onCardDragOver(e: DragEvent, id: number) {
+  if (draggingId.value === null || draggingId.value === id) {
+    dropTargetId.value = null
+    return
+  }
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+  dropTargetId.value = id
+}
+
+function onCardDragLeave(id: number) {
+  if (dropTargetId.value === id) dropTargetId.value = null
+}
+
+function onCardDrop(_e: DragEvent, targetId: number) {
+  const srcId = draggingId.value
+  if (srcId === null || srcId === targetId) {
+    cleanup()
+    return
+  }
+  const arr = [...props.warnings]
+  const srcIdx = arr.findIndex(w => w.id === srcId)
+  const dstIdx = arr.findIndex(w => w.id === targetId)
+  if (srcIdx === -1 || dstIdx === -1) {
+    cleanup()
+    return
+  }
+  const [moved] = arr.splice(srcIdx, 1)
+  arr.splice(dstIdx, 0, moved)
+  emit('update:warnings', arr)
+  cleanup()
+}
+
+function onCardDragEnd() {
+  cleanup()
+}
+
+function cleanup() {
+  draggingId.value = null
+  dropTargetId.value = null
+}
+
 function isActive(presetSeconds: number) {
   return props.duration === presetSeconds
 }
@@ -131,9 +183,16 @@ function onWarningPreview(warning: Warning) {
       :key="w.id"
       :warning="w"
       :is-playing="playingId === w.id"
+      :is-dragging="draggingId === w.id"
+      :is-drop-target="dropTargetId === w.id"
       @update:warning="updateWarning"
       @delete="deleteWarning"
       @preview="onWarningPreview"
+      @dragstart="onCardDragStart"
+      @dragover="onCardDragOver"
+      @dragleave="onCardDragLeave"
+      @drop="onCardDrop"
+      @dragend="onCardDragEnd"
     />
     <button
       @click="addWarning"

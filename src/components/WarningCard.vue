@@ -5,13 +5,29 @@ import { COLOR_LABELS, SOUND_LABELS } from '../types'
 const props = defineProps<{
   warning: Warning
   isPlaying?: boolean
+  isDragging?: boolean
+  isDropTarget?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:warning': [w: Warning]
   delete: [id: number]
   preview: [w: Warning]
+  dragstart: [e: DragEvent, id: number]
+  dragover: [e: DragEvent, id: number]
+  dragleave: [id: number]
+  drop: [e: DragEvent, id: number]
+  dragend: []
 }>()
+
+function onDragStart(e: DragEvent) {
+  const t = e.target as HTMLElement
+  if (t.matches('input, select, button, .preview-btn, .del-btn')) {
+    e.preventDefault()
+    return
+  }
+  emit('dragstart', e, props.warning.id)
+}
 
 const colorKeys = Object.keys(COLOR_LABELS) as ColorKey[]
 const soundKeys = Object.keys(SOUND_LABELS) as SoundKey[]
@@ -37,7 +53,14 @@ function updateSound(e: Event) {
 <template>
   <div
     class="warn-card bg-bg rounded-[20px] p-[0.7rem_0.7rem_0.7rem_0.4rem] mb-[0.55rem] grid gap-[0.4rem] items-center border-2 border-transparent transition-[box-shadow,transform,border-color] duration-[0.18s]"
+    :class="{ dragging: isDragging, 'drag-placeholder': isDropTarget }"
     style="grid-template-columns: 22px 64px 1fr 1fr 34px 30px"
+    draggable="true"
+    @dragstart="onDragStart"
+    @dragover.prevent="emit('dragover', $event, warning.id)"
+    @dragleave="emit('dragleave', warning.id)"
+    @drop.prevent="emit('drop', $event, warning.id)"
+    @dragend="emit('dragend')"
   >
     <!-- Col 1: Grip -->
     <div class="grip flex items-center justify-center text-[#C9BDB1] cursor-grab transition-colors duration-150 hover:text-orange" title="拖曳排序">

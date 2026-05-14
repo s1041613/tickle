@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import SettingsPanel from '../../src/components/SettingsPanel.vue'
 import type { Warning } from '../../src/types'
 
@@ -148,5 +149,78 @@ describe('SettingsPanel – warning preview', () => {
     await wrapper.vm.$nextTick()
 
     expect(cards[0].props('isPlaying')).toBe(false)
+  })
+})
+
+describe('SettingsPanel – drag-to-reorder warnings', () => {
+  const w0: Warning = { id: 1, at: 60, color: 'yellow', sound: 'chime' }
+  const w1: Warning = { id: 2, at: 30, color: 'orange', sound: 'bell' }
+  const w2: Warning = { id: 3, at: 10, color: 'red', sound: 'gong' }
+  const threeWarnings = [w0, w1, w2]
+
+  it('5.4: dragging card 0 and dropping on card 2 emits update:warnings with [w1, w2, w0]', async () => {
+    const wrapper = mount(SettingsPanel, {
+      props: { ...baseProps, warnings: threeWarnings },
+      ...mountOptions,
+    })
+    const cards = wrapper.findAllComponents({ name: 'WarningCard' })
+    expect(cards).toHaveLength(3)
+
+    // Simulate dragstart on card 0
+    await cards[0].vm.$emit('dragstart', new DragEvent('dragstart'), w0.id)
+    await nextTick()
+
+    // Simulate drop on card 2
+    await cards[2].vm.$emit('drop', new DragEvent('drop'), w2.id)
+    await nextTick()
+
+    const emitted = wrapper.emitted('update:warnings') as Warning[][][]
+    expect(emitted).toBeTruthy()
+    expect(emitted[emitted.length - 1][0]).toEqual([w1, w2, w0])
+  })
+
+  it('5.6: dropping on the same card emits no update:warnings', async () => {
+    const wrapper = mount(SettingsPanel, {
+      props: { ...baseProps, warnings: threeWarnings },
+      ...mountOptions,
+    })
+    const cards = wrapper.findAllComponents({ name: 'WarningCard' })
+
+    // Dragstart on card 1, then drop on the same card 1
+    await cards[1].vm.$emit('dragstart', new DragEvent('dragstart'), w1.id)
+    await nextTick()
+    await cards[1].vm.$emit('drop', new DragEvent('drop'), w1.id)
+    await nextTick()
+
+    expect(wrapper.emitted('update:warnings')).toBeFalsy()
+  })
+
+  it('5.7: after drop, draggingId and dropTargetId are cleared (all cards report isDragging=false, isDropTarget=false)', async () => {
+    const wrapper = mount(SettingsPanel, {
+      props: { ...baseProps, warnings: threeWarnings },
+      ...mountOptions,
+    })
+    const cards = wrapper.findAllComponents({ name: 'WarningCard' })
+
+    // Dragstart on card 0
+    await cards[0].vm.$emit('dragstart', new DragEvent('dragstart'), w0.id)
+    await nextTick()
+    // Card 0 should be dragging
+    expect(cards[0].props('isDragging')).toBe(true)
+
+    // Dragover card 2 sets drop target
+    await cards[2].vm.$emit('dragover', new DragEvent('dragover'), w2.id)
+    await nextTick()
+    expect(cards[2].props('isDropTarget')).toBe(true)
+
+    // Drop completes reorder
+    await cards[2].vm.$emit('drop', new DragEvent('drop'), w2.id)
+    await nextTick()
+
+    // After drop, all cards should have isDragging=false and isDropTarget=false
+    for (const card of cards) {
+      expect(card.props('isDragging')).toBe(false)
+      expect(card.props('isDropTarget')).toBe(false)
+    }
   })
 })

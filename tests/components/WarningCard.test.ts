@@ -98,6 +98,46 @@ describe('WarningCard – preview button', () => {
   })
 })
 
+describe('WarningCard – drag-and-drop', () => {
+  it('5.1: card has draggable="true" attribute', () => {
+    const wrapper = mount(WarningCard, { props: { warning: yellowWarning } })
+    const card = wrapper.find('.warn-card')
+    expect(card.attributes('draggable')).toBe('true')
+  })
+
+  it('5.1: dragstart from an input element is prevented (no emit from WarningCard)', async () => {
+    const wrapper = mount(WarningCard, { props: { warning: yellowWarning } })
+    const input = wrapper.find('input[type="number"]')
+    // Create a dragstart event where target is the input element
+    const event = new DragEvent('dragstart', { bubbles: true, cancelable: true })
+    Object.defineProperty(event, 'target', { value: input.element, configurable: true })
+    input.element.dispatchEvent(event)
+    await wrapper.vm.$nextTick()
+    // dragstart should not have been emitted from WarningCard
+    expect(wrapper.emitted('dragstart')).toBeFalsy()
+  })
+
+  it('5.2: isDragging=true gives card the .dragging class', () => {
+    const wrapper = mount(WarningCard, { props: { warning: yellowWarning, isDragging: true } })
+    expect(wrapper.find('.warn-card').classes()).toContain('dragging')
+  })
+
+  it('5.2: isDragging=false does not add .dragging class', () => {
+    const wrapper = mount(WarningCard, { props: { warning: yellowWarning, isDragging: false } })
+    expect(wrapper.find('.warn-card').classes()).not.toContain('dragging')
+  })
+
+  it('5.3: isDropTarget=true gives card the .drag-placeholder class', () => {
+    const wrapper = mount(WarningCard, { props: { warning: yellowWarning, isDropTarget: true } })
+    expect(wrapper.find('.warn-card').classes()).toContain('drag-placeholder')
+  })
+
+  it('5.3: isDropTarget=false does not add .drag-placeholder class', () => {
+    const wrapper = mount(WarningCard, { props: { warning: yellowWarning, isDropTarget: false } })
+    expect(wrapper.find('.warn-card').classes()).not.toContain('drag-placeholder')
+  })
+})
+
 describe('WarningCard – existing update/delete events', () => {
   it('emits update:warning when seconds input changes to a valid value', async () => {
     const wrapper = mount(WarningCard, { props: { warning: yellowWarning } })
