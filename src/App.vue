@@ -55,8 +55,8 @@ timer.onDone(() => {
 
 const panelOpen = ref(false)
 
-function handleUnlock() {
-  ensureAudio()
+async function handleUnlock() {
+  await ensureAudio()
   panelOpen.value = true
 }
 
