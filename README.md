@@ -124,7 +124,7 @@ BigTimer/
 
 ```bash
 pnpm install
-pnpm dev              # http://localhost:5173/BigTimer/
+pnpm dev              # http://localhost:5173/tickle/
 pnpm test             # 跑一次所有測試（CI 用）
 pnpm test:watch       # 開發中 watch 模式
 pnpm test:ui          # Vitest UI 介面
@@ -155,7 +155,7 @@ pnpm test
 
 ## 部署
 
-推到 `main` 分支 → GitHub Actions 自動 `pnpm test` → `pnpm build` → 發布到 `https://<username>.github.io/BigTimer/`
+推到 `main` 分支 → GitHub Actions 自動 `pnpm test` → `pnpm build` → 發布到 `https://s1041613.github.io/tickle/`
 
 **啟用 GitHub Pages**：repo Settings → Pages → Source 選 **GitHub Actions**
 

@@ -112,7 +112,7 @@ BigTimer 主要功能與 TDD 都完成，**33 個單元測試全綠**，`pnpm bu
 2. GitHub 建 repo `BigTimer`、push
 3. 在 repo Settings → Pages → Source 選 GitHub Actions
 4. push 觸發 Actions 跑 test → build → deploy
-5. 拿到 `https://<username>.github.io/BigTimer/` URL
+5. 拿到 `https://s1041613.github.io/tickle/` URL
 6. iPad Safari 開、測完整流程：解鎖音訊 → 設定 → 倒數 → 警告 → 結束
 7. 把發現的問題回頭修 + 加測試
 
@@ -142,7 +142,7 @@ BigTimer 主要功能與 TDD 都完成，**33 個單元測試全綠**，`pnpm bu
 cd /Users/zoe/Documents/Claude/Projects/BigTimer
 pnpm test      # 預期：33 passed
 pnpm build     # 預期：成功，無 vue-tsc 錯誤
-pnpm dev       # 開 http://localhost:5173/BigTimer/ 確認畫面
+pnpm dev       # 開 http://localhost:5173/tickle/ 確認畫面
 openspec validate add-vitest-tdd  # 預期：valid
 ```
 
