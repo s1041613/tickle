@@ -42,6 +42,14 @@ describe('parseWarnings', () => {
     const result = parseWarnings('abc:xyz:wrong')
     expect(result).toEqual([])
   })
+
+  it('T3d: accepts polite and cheer clap sounds as valid', () => {
+    const result = parseWarnings('60:yellow:polite,30:red:cheer')
+    expect(result).toEqual([
+      { id: 1, at: 60, color: 'yellow', sound: 'polite' },
+      { id: 2, at: 30, color: 'red', sound: 'cheer' },
+    ])
+  })
 })
 
 describe('serializeWarnings', () => {
@@ -74,5 +82,18 @@ describe('parseWarnings ↔ serializeWarnings', () => {
       expect(w.color).toBe(original[i].color)
       expect(w.sound).toBe(original[i].sound)
     })
+  })
+
+  it('T4b: round-trip preserves polite / cheer clap sounds', () => {
+    const original: Warning[] = [
+      { id: 1, at: 30, color: 'yellow', sound: 'polite' },
+      { id: 2, at: 10, color: 'red', sound: 'cheer' },
+    ]
+    const serialized = serializeWarnings(original)
+    expect(serialized).toBe('30:yellow:polite,10:red:cheer')
+    const parsed = parseWarnings(serialized)
+    expect(parsed).toHaveLength(2)
+    expect(parsed?.[0].sound).toBe('polite')
+    expect(parsed?.[1].sound).toBe('cheer')
   })
 })

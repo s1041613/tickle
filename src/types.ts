@@ -1,6 +1,6 @@
 export type ColorKey = 'yellow' | 'orange' | 'red'
 
-export type SoundKey = 'chime' | 'bell' | 'gong'
+export type SoundKey = 'chime' | 'bell' | 'gong' | 'polite' | 'cheer'
 
 export interface Warning {
   id: number
@@ -27,4 +27,6 @@ export const SOUND_LABELS: Record<SoundKey, string> = {
   chime: '🎐 chime',
   bell: '🔔 bell',
   gong: '🪘 gong',
+  polite: '👏 polite',
+  cheer: '🎉 cheer',
 }

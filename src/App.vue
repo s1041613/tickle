@@ -19,7 +19,7 @@ const warnings = ref<Warning[]>([
 ])
 const finalSound = ref<SoundKey>('gong')
 
-const { ensureAudio, playSound, unlocked } = useAudio()
+const { ensureAudio, playSound, preloadSound, unlocked } = useAudio()
 const timer = useTimer()
 
 // Apply initial duration so the display shows the right value on first paint.
@@ -57,6 +57,10 @@ const panelOpen = ref(false)
 
 async function handleUnlock() {
   await ensureAudio()
+  // If the URL pre-loaded a clap sound (e.g. shared link), warm its buffer now
+  // so the first warning trigger doesn't fall back to bell.
+  warnings.value.forEach((w) => preloadSound(w.sound))
+  preloadSound(finalSound.value)
   panelOpen.value = true
 }
 
@@ -167,6 +171,7 @@ const bodyClass = computed(() => `state-${visualState.value}`)
       :warnings="warnings"
       :final-sound="finalSound"
       :play-sound="playSound"
+      :preload-sound="preloadSound"
       @close="handlePanelClose"
       @update:duration="(v) => (duration = v)"
       @update:repeat="(v) => (repeat = v)"

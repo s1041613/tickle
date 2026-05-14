@@ -14,7 +14,7 @@
 - 大數字全螢幕、`28vw` 自適應字級
 - 任意多組警告里程碑（剩餘秒數 + 顏色 + 音效）
 - 三段獨立背景顏色（黃 / 橘 / 紅）與配套深色數字
-- Web Audio 合成的 `gong` / `bell` / `chime` 三種音效（無 mp3 依賴）
+- 五種音效：Web Audio 合成的 `gong` / `bell` / `chime`，以及 AAC 真實錄音 `polite` / `cheer`（CC0 / Mixkit Free License）
 - iPad 首次點擊解鎖音訊 overlay
 - Wake Lock 防止 iPad 自動鎖屏
 - Tab title 顯示剩餘時間
@@ -120,7 +120,7 @@ tickle/
 
 可選值：
 - 顏色：`yellow` / `orange` / `red`
-- 音效：`chime` / `bell` / `gong`
+- 音效：`chime` / `bell` / `gong` / `polite` / `cheer`
 
 ## 開發
 
@@ -175,4 +175,5 @@ pnpm test
 1. **音訊解鎖**：iOS Safari 嚴格規定音訊只能在 user gesture 內首次播放。`AudioUnlockOverlay` 在進站時要求使用者點一下螢幕，藉此呼叫 `AudioContext.resume()` 解鎖。
 2. **Wake Lock**：需 iOS 17+。倒數開始時 `navigator.wakeLock.request('screen')`，切到背景後回前景會自動 re-acquire。
 3. **rAF 在背景會停**：這個 app 是現場顯示用，背景倒數不需要精準，故未實作 `setTimeout` fallback。
-4. **PWA**：尚未加 manifest，iPad 仍可用 Safari「加到主畫面」當捷徑使用。
+4. **Clap 音效 lazy load**：`polite` / `cheer` 是 AAC 真實錄音，使用者在 SettingsPanel 切到那個選項時才下載 + decode。URL 直接帶 clap 設定時，在解鎖後一次 warm-up。若 buffer 未載完時警告觸發，fallback 播 bell。
+5. **PWA**：尚未加 manifest，iPad 仍可用 Safari「加到主畫面」當捷徑使用。

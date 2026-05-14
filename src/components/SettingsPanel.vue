@@ -14,6 +14,7 @@ const props = defineProps<{
   warnings: Warning[]
   finalSound: SoundKey
   playSound: (kind: SoundKey) => void
+  preloadSound?: (kind: SoundKey) => void
 }>()
 
 const emit = defineEmits<{
@@ -100,6 +101,7 @@ function selectPreset(presetSeconds: number) {
 
 function updateWarning(updated: Warning) {
   emit('update:warnings', props.warnings.map((w) => (w.id === updated.id ? updated : w)))
+  props.preloadSound?.(updated.sound)
 }
 
 function deleteWarning(id: number) {
@@ -115,7 +117,9 @@ function addWarning() {
 }
 
 function updateFinal(e: Event) {
-  emit('update:finalSound', (e.target as HTMLSelectElement).value as SoundKey)
+  const v = (e.target as HTMLSelectElement).value as SoundKey
+  emit('update:finalSound', v)
+  props.preloadSound?.(v)
 }
 
 function onWarningPreview(warning: Warning) {
