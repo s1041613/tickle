@@ -88,3 +88,75 @@
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(0.92); }
 }
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(255,107,61,0.45); }
+  100% { box-shadow: 0 0 0 10px rgba(255,107,61,0); }
+}
+
+@layer components {
+  /* ===== WarningCard selects base ===== */
+  .warn-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%238C7A6E' d='M1 1.5L6 6.5L11 1.5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.55rem center;
+    background-size: 10px;
+    color: var(--color-ink);
+  }
+  .warn-select:focus { box-shadow: 0 0 0 2px var(--color-orange-soft); }
+
+  /* ===== WarningCard tinted color selects ===== */
+  .warn-select.color-yellow {
+    background-color: var(--color-warn-yellow-bg);
+    color: var(--color-warn-yellow-text);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%23B07A2A' d='M1 1.5L6 6.5L11 1.5'/></svg>");
+  }
+  .warn-select.color-orange {
+    background-color: var(--color-warn-orange-bg);
+    color: var(--color-warn-orange-text);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%23B84A1F' d='M1 1.5L6 6.5L11 1.5'/></svg>");
+  }
+  .warn-select.color-red {
+    background-color: var(--color-warn-red-bg);
+    color: var(--color-warn-red-text);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%23C42028' d='M1 1.5L6 6.5L11 1.5'/></svg>");
+  }
+
+  /* ===== WarningCard drag states (JS wiring comes in Group 5) ===== */
+  .warn-card.dragging {
+    box-shadow: 0 14px 28px rgba(28,20,16,0.18);
+    transform: scale(1.015);
+    border-color: var(--color-orange-soft);
+    background: #fff;
+  }
+  .warn-card.drag-placeholder {
+    opacity: 0.35;
+    background: var(--color-orange-soft);
+  }
+
+  /* ===== Preview button ===== */
+  .preview-btn {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--color-orange);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .preview-btn:hover { background: var(--color-orange-soft); }
+  .preview-btn:active { transform: scale(0.92); }
+  .preview-btn.playing {
+    background: var(--color-orange);
+    color: #fff;
+    animation: pulse-ring 0.9s ease-out infinite;
+  }
+  .preview-btn svg { width: 12px; height: 12px; display: block; }
+}

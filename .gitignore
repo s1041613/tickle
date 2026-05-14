@@ -1,9 +1,12 @@
 node_modules
 dist
 dist-ssr
+.worktrees
 *.local
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
 .idea
 *.log
+
+mockups/*
