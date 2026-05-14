@@ -16,9 +16,14 @@ const hDisplay = computed(() => String(h.value))
 const mDisplay = computed(() => String(m.value))
 const sDisplay = computed(() => String(s.value))
 
+const MAX = { h: 23, m: 59, s: 59 } as const
+
 function onField(field: 'h' | 'm' | 's', e: Event) {
-  const raw = (e.target as HTMLInputElement).value
-  const v = raw === '' ? 0 : Number(raw)
+  const input = e.target as HTMLInputElement
+  const cleaned = input.value.replace(/\D/g, '')
+  let v = cleaned === '' ? 0 : Number(cleaned)
+  if (v > MAX[field]) v = MAX[field]
+  if (input.value !== String(v)) input.value = String(v)
   setHms({ h: h.value, m: m.value, s: s.value, [field]: v })
 }
 
@@ -32,10 +37,10 @@ function onBlur(e: Event) {
   <div class="grid grid-cols-3 gap-[0.55rem]">
     <div class="hms-cell">
       <input
-        type="number"
+        type="text"
         inputmode="numeric"
-        min="0"
-        max="23"
+        pattern="[0-9]*"
+        maxlength="2"
         :value="hDisplay"
         @input="onField('h', $event)"
         @blur="onBlur"
@@ -45,10 +50,10 @@ function onBlur(e: Event) {
     </div>
     <div class="hms-cell">
       <input
-        type="number"
+        type="text"
         inputmode="numeric"
-        min="0"
-        max="59"
+        pattern="[0-9]*"
+        maxlength="2"
         :value="mDisplay"
         @input="onField('m', $event)"
         @blur="onBlur"
@@ -58,10 +63,10 @@ function onBlur(e: Event) {
     </div>
     <div class="hms-cell">
       <input
-        type="number"
+        type="text"
         inputmode="numeric"
-        min="0"
-        max="59"
+        pattern="[0-9]*"
+        maxlength="2"
         :value="sDisplay"
         @input="onField('s', $event)"
         @blur="onBlur"
@@ -87,14 +92,7 @@ function onBlur(e: Event) {
   background: #fff;
 }
 
-.hms-cell input::-webkit-outer-spin-button,
-.hms-cell input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.hms-cell input[type='number'] {
-  -moz-appearance: textfield;
+.hms-cell input {
   font-variant-numeric: tabular-nums;
 }
 
