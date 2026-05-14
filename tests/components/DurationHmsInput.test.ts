@@ -20,9 +20,9 @@ describe('DurationHmsInput', () => {
     })
     const hourInput = wrapper.findAll('input[type="number"]')[0]
     await hourInput.setValue('2')
-    await hourInput.trigger('input')
     const emitted = wrapper.emitted('update:modelValue')
     expect(emitted).toBeTruthy()
+    expect(emitted).toHaveLength(1)
     // h=2, m=1, s=1 → 7200 + 60 + 1 = 7261
     expect((emitted as number[][])[0][0]).toBe(7261)
   })
@@ -34,16 +34,13 @@ describe('DurationHmsInput', () => {
     const inputs = wrapper.findAll('input[type="number"]')
 
     await inputs[0].setValue('0')
-    await inputs[0].trigger('input')
     // Update prop to reflect the last emit
     await wrapper.setProps({ modelValue: 0 })
 
     await inputs[1].setValue('0')
-    await inputs[1].trigger('input')
     await wrapper.setProps({ modelValue: 0 })
 
     await inputs[2].setValue('0')
-    await inputs[2].trigger('input')
 
     const emitted = wrapper.emitted('update:modelValue') as number[][]
     expect(emitted).toBeTruthy()
@@ -59,9 +56,9 @@ describe('DurationHmsInput', () => {
     // Simulate clearing the minute field — browser sends ""
     const minuteInput = inputs[1]
     await minuteInput.setValue('')
-    await minuteInput.trigger('input')
     const emitted = wrapper.emitted('update:modelValue') as number[][]
     expect(emitted).toBeTruthy()
+    expect(emitted).toHaveLength(1)
     // h=1, m=0 (NaN clamped to 0), s=1 → 3600 + 0 + 1 = 3601
     expect(emitted[0][0]).toBe(3601)
   })

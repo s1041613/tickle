@@ -12,19 +12,9 @@ const secondsRef = computed({
 
 const { h, m, s, setHms } = useDurationHms(secondsRef)
 
-function onHour(e: Event) {
+function onField(field: 'h' | 'm' | 's', e: Event) {
   const v = Number((e.target as HTMLInputElement).value)
-  setHms({ h: v, m: m.value, s: s.value })
-}
-
-function onMinute(e: Event) {
-  const v = Number((e.target as HTMLInputElement).value)
-  setHms({ h: h.value, m: v, s: s.value })
-}
-
-function onSecond(e: Event) {
-  const v = Number((e.target as HTMLInputElement).value)
-  setHms({ h: h.value, m: m.value, s: v })
+  setHms({ h: h.value, m: m.value, s: s.value, [field]: v })
 }
 </script>
 
@@ -36,7 +26,7 @@ function onSecond(e: Event) {
         min="0"
         max="23"
         :value="h"
-        @input="onHour"
+        @input="onField('h', $event)"
         class="w-full border-0 bg-transparent text-center text-2xl font-bold text-ink outline-none tabular-nums"
       />
       <span class="hms-unit">時</span>
@@ -47,7 +37,7 @@ function onSecond(e: Event) {
         min="0"
         max="59"
         :value="m"
-        @input="onMinute"
+        @input="onField('m', $event)"
         class="w-full border-0 bg-transparent text-center text-2xl font-bold text-ink outline-none tabular-nums"
       />
       <span class="hms-unit">分</span>
@@ -58,7 +48,7 @@ function onSecond(e: Event) {
         min="0"
         max="59"
         :value="s"
-        @input="onSecond"
+        @input="onField('s', $event)"
         class="w-full border-0 bg-transparent text-center text-2xl font-bold text-ink outline-none tabular-nums"
       />
       <span class="hms-unit">秒</span>
@@ -69,7 +59,7 @@ function onSecond(e: Event) {
 <style scoped>
 .hms-cell {
   background: var(--color-bg);
-  border-radius: var(--radius-md, 0.75rem);
+  border-radius: 20px;
   padding: 0.85rem 0.6rem 0.7rem;
   text-align: center;
   border: 2px solid transparent;
