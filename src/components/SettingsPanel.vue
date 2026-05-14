@@ -25,6 +25,23 @@ const emit = defineEmits<{
 
 const soundKeys = Object.keys(SOUND_LABELS) as SoundKey[]
 
+const PRESETS = [
+  { seconds: 60, label: '1 分' },
+  { seconds: 300, label: '5 分' },
+  { seconds: 600, label: '10 分' },
+  { seconds: 900, label: '15 分' },
+  { seconds: 1800, label: '30 分' },
+  { seconds: 3600, label: '1 時' },
+] as const
+
+function isActive(presetSeconds: number) {
+  return props.duration === presetSeconds
+}
+
+function selectPreset(presetSeconds: number) {
+  emit('update:duration', presetSeconds)
+}
+
 function updateWarning(updated: Warning) {
   emit('update:warnings', props.warnings.map((w) => (w.id === updated.id ? updated : w)))
 }
@@ -66,6 +83,18 @@ function updateFinal(e: Event) {
     <div class="mt-3 mb-4">
       <label class="block text-sm mb-2 font-semibold text-muted">倒數時間</label>
       <DurationHmsInput :model-value="duration" @update:model-value="$emit('update:duration', $event)" />
+      <div class="preset-chips">
+        <button
+          v-for="preset in PRESETS"
+          :key="preset.seconds"
+          class="chip"
+          :class="{ active: isActive(preset.seconds) }"
+          type="button"
+          @click="selectPreset(preset.seconds)"
+        >
+          {{ preset.label }}
+        </button>
+      </div>
       <div class="text-xs text-muted mt-1.5">
         💡 設定 30 秒可快速測試，警告里程碑會在剩 20 / 10 秒觸發
       </div>
@@ -127,3 +156,34 @@ function updateFinal(e: Event) {
     </div>
   </aside>
 </template>
+
+<style scoped>
+.preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.chip {
+  border: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.chip:hover {
+  background: var(--color-orange-soft);
+}
+
+.chip.active {
+  background: var(--color-orange);
+  color: #fff;
+}
+</style>
