@@ -32,6 +32,7 @@ function onDragStart(e: DragEvent) {
 const colorKeys = Object.keys(COLOR_LABELS) as ColorKey[]
 const soundKeys = Object.keys(SOUND_LABELS) as SoundKey[]
 
+// Note: @dragover.prevent and @drop.prevent are required for drop to fire; .prevent prevents default dragover behavior
 function updateAt(e: Event) {
   const v = Number((e.target as HTMLInputElement).value)
   if (Number.isFinite(v) && v > 0) {

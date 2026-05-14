@@ -179,6 +179,27 @@ describe('SettingsPanel – drag-to-reorder warnings', () => {
     expect(emitted[emitted.length - 1][0]).toEqual([w1, w2, w0])
   })
 
+  it('5.5: dragging card 2 and dropping on card 0 emits update:warnings with [w2, w0, w1]', async () => {
+    const wrapper = mount(SettingsPanel, {
+      props: { ...baseProps, warnings: threeWarnings },
+      ...mountOptions,
+    })
+    const cards = wrapper.findAllComponents({ name: 'WarningCard' })
+    expect(cards).toHaveLength(3)
+
+    // Simulate dragstart on card 2
+    await cards[2].vm.$emit('dragstart', new DragEvent('dragstart'), w2.id)
+    await nextTick()
+
+    // Simulate drop on card 0
+    await cards[0].vm.$emit('drop', new DragEvent('drop'), w0.id)
+    await nextTick()
+
+    const emitted = wrapper.emitted('update:warnings') as Warning[][][]
+    expect(emitted).toBeTruthy()
+    expect(emitted[emitted.length - 1][0]).toEqual([w2, w0, w1])
+  })
+
   it('5.6: dropping on the same card emits no update:warnings', async () => {
     const wrapper = mount(SettingsPanel, {
       props: { ...baseProps, warnings: threeWarnings },
