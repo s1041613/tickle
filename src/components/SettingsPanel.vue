@@ -210,11 +210,11 @@ function onFinalPreview() {
     <div class="mt-6 mb-3">
       <SectionTag>結束音效</SectionTag>
     </div>
-    <div class="flex gap-2 items-center mb-4">
+    <div class="final-card mb-4">
       <select
         :value="finalSound"
         @change="updateFinal"
-        class="warn-select flex-1 min-w-0 px-[1.1rem] py-[0.85rem] text-base"
+        class="warn-select flex-1 min-w-0"
       >
         <option v-for="k in soundKeys" :key="k" :value="k">{{ SOUND_LABELS[k] }}</option>
       </select>
@@ -285,5 +285,14 @@ function onFinalPreview() {
 
 .cta-done:hover {
   background: #FFD4BC;
+}
+
+.final-card {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-bg);
+  border-radius: 20px;
+  padding: 0.7rem 0.7rem;
 }
 </style>
