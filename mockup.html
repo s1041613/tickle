@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BigTimer</title>
+<style>
+  :root {
+    --bg: #FAF7F2;
+    --ink: #1C1410;
+    --orange: #FF6B3D;
+    --orange-soft: #FFE3D6;
+    --yellow: #FFD93D;
+    --red: #E63946;
+    --muted: #8C7A6E;
+    --card: #FFFFFF;
+    --card-shadow: 0 8px 32px rgba(28,20,16,0.06);
+    --radius-lg: 28px;
+    --radius-md: 20px;
+    --radius-pill: 9999px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: "Apple SD Gothic Neo", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang TC", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    transition: background-color 0.6s ease;
+    position: relative;
+  }
+
+  body.state-default { background: var(--bg); }
+  body.state-warn-1  { background: #FFF4E8; }
+  body.state-warn-2  { background: #FFE5DC; }
+  body.state-done    { background: var(--orange); color: #fff; animation: pulse 0.8s infinite alternate; }
+  @keyframes pulse { from { background: var(--orange); } to { background: #FF8A5C; } }
+
+  .section-tag {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.95rem; font-weight: 700; color: var(--ink);
+  }
+  .section-tag::before {
+    content: ""; display: inline-block;
+    width: 10px; height: 16px;
+    background: var(--yellow);
+    border-radius: 2px;
+    transform: skewX(-10deg);
+  }
+
+  .timer-wrap {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    pointer-events: none; padding: 2rem;
+  }
+  .timer {
+    font-weight: 900;
+    font-size: 28vw;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    color: var(--ink);
+    transition: color 0.5s ease;
+  }
+  body.state-warn-1 .timer { color: #C95A1F; }
+  body.state-warn-2 .timer { color: var(--orange); }
+  body.state-done .timer { color: #fff; }
+
+  .label {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  body.state-warn-1 .label, body.state-warn-2 .label { color: var(--orange); }
+  body.state-done .label { color: #fff; opacity: 0.95; font-size: 1.4rem; }
+
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  .settings-btn {
+    position: fixed; bottom: 1.75rem; right: 1.75rem;
+    height: 56px; padding: 0 1.5rem;
+    border-radius: var(--radius-pill);
+    background: var(--orange);
+    border: none; color: #fff;
+    font-size: 1rem; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(255,107,61,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: inherit;
+  }
+  .settings-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255,107,61,0.45); }
+  .settings-btn:active { transform: translateY(0); }
+  body.state-done .settings-btn { background: #fff; color: var(--orange); }
+
+  .panel {
+    position: fixed;
+    top: 1.25rem; right: 1.25rem; bottom: 1.25rem;
+    width: min(440px, 92vw);
+    background: var(--card); color: var(--ink);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1.75rem;
+    transform: translateX(calc(100% + 1.5rem));
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(28,20,16,0.15);
+    z-index: 10;
+  }
+  body.panel-open .panel { transform: translateX(0); }
+
+  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; }
+  .panel h2 { font-size: 1.5rem; font-weight: 800; }
+
+  .close-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--bg); border: none;
+    font-size: 1.25rem; cursor: pointer;
+    color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .close-btn:hover { background: var(--orange-soft); }
+
+  .field { margin-bottom: 1rem; }
+  .field-label { display: block; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--muted); }
+  .input, .select {
+    width: 100%; padding: 0.85rem 1.1rem;
+    border: 2px solid transparent;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    font-size: 1rem; font-family: inherit; font-weight: 600;
+    color: var(--ink);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .input:focus, .select:focus { outline: none; border-color: var(--orange); background: #fff; }
+
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.85rem 1.1rem;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    margin-bottom: 0.6rem;
+  }
+  .toggle-row .toggle-label { font-weight: 600; }
+  .toggle-row .toggle-hint  { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+
+  .switch {
+    position: relative; width: 50px; height: 30px;
+    background: #ddd; border-radius: var(--radius-pill);
+    cursor: pointer; transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: ""; position: absolute;
+    top: 3px; left: 3px;
+    width: 24px; height: 24px;
+    background: #fff; border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .switch.on { background: var(--orange); }
+  .switch.on::after { transform: translateX(20px); }
+
+  .panel h3 { margin: 1.75rem 0 0.75rem; }
+
+  .warn-card {
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    padding: 0.85rem;
+    margin-bottom: 0.6rem;
+    display: grid;
+    grid-template-columns: 90px 1fr 1fr 36px;
+    gap: 0.5rem; align-items: center;
+  }
+  .warn-card .seconds, .warn-card .swatch-select, .warn-card .sound-select {
+    background: #fff; border: none;
+    padding: 0.6rem; border-radius: 14px;
+    font-weight: 600; font-size: 0.85rem;
+    font-family: inherit;
+  }
+  .warn-card .seconds { text-align: center; font-weight: 700; font-size: 1rem; }
+  .warn-card .del-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%; background: #fff;
+    color: var(--muted); border: none;
+    cursor: pointer; font-size: 1rem;
+  }
+  .warn-card .del-btn:hover { background: #FFE5DC; color: var(--orange); }
+
+  .add-btn {
+    width: 100%; padding: 0.95rem;
+    border: 2px dashed #D9CFC4;
+    background: transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer; font-weight: 700;
+    color: var(--muted); font-family: inherit; font-size: 0.95rem;
+  }
+  .add-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-soft); }
+
+  .controls {
+    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  .controls button {
+    padding: 1.1rem; border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+    transition: transform 0.15s;
+  }
+  .controls button:active { transform: scale(0.97); }
+  .controls .primary { background: var(--orange); color: #fff; box-shadow: 0 6px 18px rgba(255,107,61,0.3); }
+  .controls .secondary { background: var(--bg); color: var(--ink); }
+
+  .panel-foot-hint {
+    margin-top: 1.5rem; padding: 1rem 1.1rem;
+    background: #FFF8E8;
+    border-radius: var(--radius-md);
+    font-size: 0.82rem; line-height: 1.5;
+    border-left: 4px solid var(--yellow);
+  }
+
+  .test-sound-btn {
+    background: transparent; border: none;
+    color: var(--orange); cursor: pointer;
+    font-weight: 600; font-size: 0.85rem;
+    padding: 0.5rem; font-family: inherit;
+  }
+  .test-sound-btn:hover { text-decoration: underline; }
+
+  .unlock-overlay {
+    position: fixed; inset: 0;
+    background: var(--orange); color: #fff;
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 100; cursor: pointer;
+    flex-direction: column; gap: 1.5rem;
+    text-align: center; padding: 2rem;
+  }
+  body.show-unlock .unlock-overlay { display: flex; }
+  .unlock-overlay .icon {
+    width: 120px; height: 120px;
+    background: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    animation: tap 1.5s infinite;
+  }
+  @keyframes tap {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(0.92); }
+  }
+  .unlock-overlay .big-text { font-size: 2.5rem; font-weight: 900; }
+  .unlock-overlay .hint {
+    font-size: 1.05rem; opacity: 0.9;
+    max-width: 360px; line-height: 1.7;
+    word-break: keep-all;          /* don't break inside CJK words */
+    overflow-wrap: break-word;
+    line-break: strict;
+  }
+</style>
+</head>
+<body class="state-default show-unlock">
+
+  <!-- Audio unlock overlay (iPad first-tap) -->
+  <div class="unlock-overlay" id="unlock">
+    <div class="icon">👆</div>
+    <div class="big-text">點一下螢幕</div>
+    <div class="hint">iPad Safari 規定<br>必須先點擊一次才能播放警示音</div>
+  </div>
+
+  <!-- Main timer -->
+  <div class="timer-wrap">
+    <div class="timer" id="timer-text">05:00</div>
+    <div class="label" id="label-text">準備倒數</div>
+  </div>
+
+  <!-- Bottom-right settings -->
+  <button class="settings-btn" id="open-panel">
+    <span>⚙</span>
+    <span>設定</span>
+  </button>
+
+  <!-- Settings panel -->
+  <aside class="panel">
+    <div class="panel-header">
+      <h2>計時器設定</h2>
+      <button class="close-btn" id="close-panel" aria-label="關閉">×</button>
+    </div>
+
+    <span class="section-tag">基本</span>
+    <div class="field" style="margin-top: 0.75rem;">
+      <label class="field-label">倒數時間（秒）</label>
+      <input type="number" class="input" id="duration-input" value="30" min="1">
+      <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.4rem;">
+        💡 用 30 秒測試，警告會在剩 20 / 10 秒觸發
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">時間到後循環</div>
+        <div class="toggle-hint">適合番茄鐘、間歇任務</div>
+      </div>
+      <div class="switch" id="sw-repeat"></div>
+    </div>
+
+    <span class="section-tag" style="margin-top: 1.5rem; display: inline-flex;">警告里程碑</span>
+    <div id="warn-list" style="margin-top: 0.75rem;"></div>
+    <button class="add-btn" id="add-warn">+ 新增警告</button>
+
+    <span class="section-tag" style="margin-top: 1.5rem; display: inline-flex;">結束音效</span>
+    <div class="field" style="margin-top: 0.75rem; display: flex; gap: 0.5rem; align-items: center;">
+      <select class="select" id="final-sound" style="flex: 1;">
+        <option value="gong" selected>🪘 gong (鑼聲)</option>
+        <option value="bell">🔔 bell</option>
+        <option value="chime">🎐 chime</option>
+      </select>
+      <button class="test-sound-btn" data-test="final">▶ 試聽</button>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="btn-start">▶ 開始</button>
+      <button class="secondary" id="btn-pause">⏸</button>
+      <button class="secondary" id="btn-reset">↻</button>
+    </div>
+
+    <div class="panel-foot-hint">
+      💡 真實版本中，所有設定會自動寫進網址列。<br>
+      複製當前 URL，貼到 iPad Safari 就能用，完全一致。
+    </div>
+  </aside>
+
+<script>
+  // ─────────────────────────────────────────────
+  //  Web Audio: synthesize gong / bell / chime
+  // ─────────────────────────────────────────────
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playSound(kind) {
+    const ctx = ensureAudio();
+    const now = ctx.currentTime;
+
+    if (kind === 'gong') {
+      // Low-frequency sine with long decay + slight detune for richness
+      const freqs = [82, 110, 165]; // low gong overtones
+      freqs.forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.35 / (i+1), now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 2.5);
+      });
+    } else if (kind === 'bell') {
+      // Bright bell-like ping
+      const fundamentals = [880, 1320];
+      fundamentals.forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.3 / (i+1), now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 1.2);
+      });
+    } else if (kind === 'chime') {
+      // 3-note chord C-E-G (523, 659, 784 Hz)
+      const notes = [523.25, 659.25, 783.99];
+      notes.forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        const start = now + i * 0.08;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 1.5);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 1.5);
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  //  Warning milestones state
+  // ─────────────────────────────────────────────
+  const colorMap = {
+    yellow: { name: '🟡 黃色', state: 'state-warn-1' },
+    orange: { name: '🟠 橘色', state: 'state-warn-1' },
+    red:    { name: '🔴 紅色', state: 'state-warn-2' },
+  };
+  const soundOptions = ['chime', 'bell', 'gong'];
+  let warnings = [
+    { at: 20, color: 'yellow', sound: 'chime', id: 1 },
+    { at: 10, color: 'orange', sound: 'bell',  id: 2 },
+  ];
+
+  function renderWarnings() {
+    const list = document.getElementById('warn-list');
+    list.innerHTML = '';
+    warnings.forEach((w) => {
+      const row = document.createElement('div');
+      row.className = 'warn-card';
+      row.innerHTML = `
+        <input type="number" class="seconds" value="${w.at}" min="1">
+        <select class="swatch-select">
+          ${Object.entries(colorMap).map(([k, v]) =>
+            `<option value="${k}" ${k === w.color ? 'selected' : ''}>${v.name}</option>`).join('')}
+        </select>
+        <select class="sound-select">
+          ${soundOptions.map(s =>
+            `<option value="${s}" ${s === w.sound ? 'selected' : ''}>${s === 'gong' ? '🪘' : s === 'bell' ? '🔔' : '🎐'} ${s}</option>`).join('')}
+        </select>
+        <button class="del-btn" data-del="${w.id}">✕</button>
+      `;
+      // wire up
+      row.querySelector('.seconds').addEventListener('input', e => w.at = +e.target.value);
+      row.querySelector('.swatch-select').addEventListener('change', e => w.color = e.target.value);
+      row.querySelector('.sound-select').addEventListener('change', e => w.sound = e.target.value);
+      row.querySelector('.del-btn').addEventListener('click', () => {
+        warnings = warnings.filter(x => x.id !== w.id);
+        renderWarnings();
+      });
+      list.appendChild(row);
+    });
+  }
+  renderWarnings();
+
+  document.getElementById('add-warn').addEventListener('click', () => {
+    const nextId = Math.max(0, ...warnings.map(w => w.id)) + 1;
+    warnings.push({ at: 5, color: 'red', sound: 'gong', id: nextId });
+    renderWarnings();
+  });
+
+  // ─────────────────────────────────────────────
+  //  Countdown core
+  // ─────────────────────────────────────────────
+  const body = document.body;
+  const timerEl = document.getElementById('timer-text');
+  const labelEl = document.getElementById('label-text');
+  const durationInput = document.getElementById('duration-input');
+
+  let totalSec = 30;
+  let remainSec = 30;
+  let running = false;
+  let endAtMs = 0;
+  let triggered = new Set(); // warning ids that have fired
+  let rafId = null;
+
+  function format(s) {
+    s = Math.max(0, Math.ceil(s));
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  }
+
+  function applyState(s) {
+    body.classList.remove('state-default','state-warn-1','state-warn-2','state-done');
+    body.classList.add(s);
+  }
+
+  function tick() {
+    if (!running) return;
+    const now = Date.now();
+    remainSec = (endAtMs - now) / 1000;
+
+    if (remainSec <= 0) {
+      remainSec = 0;
+      timerEl.textContent = '00:00';
+      labelEl.textContent = '⏰ 時間到';
+      applyState('state-done');
+      playSound(document.getElementById('final-sound').value);
+      running = false;
+      if (document.getElementById('sw-repeat').classList.contains('on')) {
+        setTimeout(() => start(), 1500);
+      }
+      return;
+    }
+
+    timerEl.textContent = format(remainSec);
+    const intSec = Math.ceil(remainSec);
+
+    // milestone detection: only fire when crossing
+    warnings.forEach(w => {
+      if (!triggered.has(w.id) && intSec <= w.at) {
+        triggered.add(w.id);
+        playSound(w.sound);
+        applyState(colorMap[w.color].state);
+        labelEl.textContent = `剩 ${w.at} 秒`;
+      }
+    });
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start() {
+    totalSec = +durationInput.value || 30;
+    remainSec = totalSec;
+    endAtMs = Date.now() + totalSec * 1000;
+    triggered.clear();
+    running = true;
+    applyState('state-default');
+    labelEl.textContent = '倒數中';
+    timerEl.textContent = format(remainSec);
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function pause() {
+    running = false;
+    cancelAnimationFrame(rafId);
+    labelEl.textContent = '已暫停';
+  }
+
+  function reset() {
+    running = false;
+    cancelAnimationFrame(rafId);
+    totalSec = +durationInput.value || 30;
+    remainSec = totalSec;
+    triggered.clear();
+    applyState('state-default');
+    timerEl.textContent = format(remainSec);
+    labelEl.textContent = '準備倒數';
+    statusEl.textContent = '待機中';
+  }
+
+  document.getElementById('btn-start').addEventListener('click', start);
+  document.getElementById('btn-pause').addEventListener('click', pause);
+  document.getElementById('btn-reset').addEventListener('click', reset);
+  durationInput.addEventListener('input', () => {
+    if (!running) {
+      totalSec = +durationInput.value || 30;
+      remainSec = totalSec;
+      timerEl.textContent = format(remainSec);
+    }
+  });
+
+  // Switches
+  document.querySelectorAll('.switch').forEach(sw => {
+    sw.addEventListener('click', () => sw.classList.toggle('on'));
+  });
+
+  // Test sound buttons
+  document.querySelectorAll('.test-sound-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const which = btn.dataset.test;
+      if (which === 'final') playSound(document.getElementById('final-sound').value);
+    });
+  });
+
+  // Panel open/close
+  document.getElementById('open-panel').addEventListener('click', () => body.classList.add('panel-open'));
+  document.getElementById('close-panel').addEventListener('click', () => body.classList.remove('panel-open'));
+
+  // First-tap unlock
+  document.getElementById('unlock').addEventListener('click', () => {
+    ensureAudio();
+    body.classList.remove('show-unlock');
+    // open settings panel on first entry so user sees controls
+    body.classList.add('panel-open');
+  });
+
+  // Initial display
+  reset();
+</script>
+</body>
+</html>
