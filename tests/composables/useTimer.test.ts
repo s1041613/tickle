@@ -155,4 +155,21 @@ describe('useTimer', () => {
     expect(cb1).toHaveBeenCalledTimes(1)
     expect(cb2).toHaveBeenCalledTimes(1)
   })
+
+  describe('formatted - cross-hour', () => {
+    it('should format 4675s as 1:17:55', () => {
+      timer.setDuration(4675)
+      expect(timer.formatted.value).toBe('1:17:55')
+    })
+
+    it('should format 3600s as 1:00:00', () => {
+      timer.setDuration(3600)
+      expect(timer.formatted.value).toBe('1:00:00')
+    })
+
+    it('should format 3599s as 59:59 (boundary - stays MM:SS below 1 hour)', () => {
+      timer.setDuration(3599)
+      expect(timer.formatted.value).toBe('59:59')
+    })
+  })
 })
