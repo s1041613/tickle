@@ -1,3 +1,9 @@
+// iPad Safari Web Audio gotchas — see docs/DECISIONS.md bug #9.
+// TL;DR before editing this file:
+//   1. exponentialRampToValueAtTime values MUST be > 0 (use 0.0001 minimum)
+//   2. AudioContext.resume() MUST be awaited inside the user gesture
+//   3. Schedule at least one audio node in the same gesture (warmUp does this)
+// Desktop browsers tolerate violations; iPad Safari silently drops audio.
 import { ref } from 'vue'
 import type { SoundKey } from '../types'
 
