@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BigTimer Settings Panel v2 — Mockup</title>
+<style>
+  :root {
+    --bg: #FAF7F2;
+    --ink: #1C1410;
+    --orange: #FF6B3D;
+    --orange-soft: #FFE3D6;
+    --yellow: #FFD93D;
+    --red: #E63946;
+    --muted: #8C7A6E;
+    --card: #FFFFFF;
+    --card-shadow: 0 8px 32px rgba(28,20,16,0.06);
+    --radius-lg: 28px;
+    --radius-md: 20px;
+    --radius-pill: 9999px;
+    --row-bg: #FAF7F2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; min-height: 100%; -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: "Apple SD Gothic Neo", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang TC", sans-serif;
+    background: #B85A3D;
+    color: var(--ink);
+    padding: 2.5rem 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  /* Section tag (黃色斜方塊小標) */
+  .section-tag {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.95rem; font-weight: 700; color: var(--ink);
+  }
+  .section-tag::before {
+    content: ""; display: inline-block;
+    width: 10px; height: 16px;
+    background: var(--yellow);
+    border-radius: 2px;
+    transform: skewX(-10deg);
+  }
+
+  /* ===== 面板 ===== */
+  .panel {
+    width: min(460px, 100%);
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(28,20,16,0.15);
+    padding: 2rem 1.75rem 2.25rem;
+    position: relative;
+  }
+
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.75rem;
+  }
+  .panel-head h2 {
+    font-size: 1.65rem; font-weight: 800; letter-spacing: -0.01em;
+  }
+  .close-btn {
+    width: 40px; height: 40px;
+    border: 0; border-radius: 50%;
+    background: var(--row-bg);
+    color: var(--ink);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .close-btn:hover { background: var(--orange-soft); }
+
+  /* ===== 區塊與標籤 ===== */
+  .section { margin-bottom: 1.75rem; }
+  .section:last-of-type { margin-bottom: 0; }
+  .field-label {
+    display: block;
+    margin: 1.1rem 0 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .field-hint {
+    margin-top: 0.55rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  /* ===== 時/分/秒輸入 ===== */
+  .hms {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.55rem;
+  }
+  .hms-cell {
+    background: var(--row-bg);
+    border-radius: var(--radius-md);
+    padding: 0.85rem 0.6rem 0.7rem;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .hms-cell:focus-within {
+    border-color: var(--orange);
+    background: #fff;
+  }
+  .hms-cell input {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: center;
+    font-family: inherit;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .hms-cell input::-webkit-outer-spin-button,
+  .hms-cell input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .hms-unit {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* ===== 預設時長 chips ===== */
+  .preset-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+  .chip {
+    border: 0;
+    background: var(--row-bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .chip:hover { background: var(--orange-soft); }
+  .chip.active { background: var(--orange); color: #fff; }
+
+  /* ===== Toggle row ===== */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.85rem 1.1rem;
+    background: var(--row-bg);
+    border-radius: var(--radius-md);
+    margin-top: 0.6rem;
+  }
+  .toggle-row .label-main { font-size: 0.95rem; font-weight: 700; color: var(--ink); }
+  .toggle-row .label-sub { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+  .switch {
+    position: relative;
+    width: 50px; height: 30px;
+    background: #ddd;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .switch::after {
+    content: "";
+    position: absolute; top: 3px; left: 3px;
+    width: 24px; height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .switch.on { background: var(--orange); }
+  .switch.on::after { transform: translateX(20px); }
+
+  /* ===== 警告里程碑列 ===== */
+  .warn-list { display: flex; flex-direction: column; gap: 0.55rem; }
+
+  .warn-card {
+    display: grid;
+    grid-template-columns: 22px 64px 1fr 1fr 34px 30px;
+    gap: 0.4rem;
+    align-items: center;
+    background: var(--row-bg);
+    border-radius: var(--radius-md);
+    padding: 0.7rem 0.7rem 0.7rem 0.4rem;
+    border: 2px solid transparent;
+    transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
+  }
+  .warn-card.dragging {
+    box-shadow: 0 14px 28px rgba(28,20,16,0.18);
+    transform: scale(1.015);
+    border-color: var(--orange-soft);
+    background: #fff;
+  }
+  .warn-card.drag-placeholder {
+    opacity: 0.35;
+    background: var(--orange-soft);
+  }
+
+  /* grip 手把 */
+  .grip {
+    width: 22px; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab;
+    color: #C9BDB1;
+    transition: color 0.15s;
+  }
+  .grip:hover { color: var(--orange); }
+  .grip:active { cursor: grabbing; }
+  .grip svg { width: 12px; height: 18px; display: block; }
+
+  /* 秒數欄 */
+  .warn-seconds {
+    background: #fff;
+    border: 0;
+    border-radius: 14px;
+    padding: 0.55rem 0.3rem;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--ink);
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .warn-seconds::-webkit-outer-spin-button,
+  .warn-seconds::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* 顏色 / 音效下拉 */
+  .warn-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%238C7A6E' d='M1 1.5L6 6.5L11 1.5'/></svg>") no-repeat right 0.55rem center / 10px;
+    border: 0;
+    border-radius: 14px;
+    padding: 0.55rem 1.4rem 0.55rem 0.7rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    min-width: 0;
+  }
+  .warn-select:focus { box-shadow: 0 0 0 2px var(--orange-soft); }
+
+  /* 試聽按鈕 */
+  .preview-btn {
+    width: 34px; height: 34px;
+    border: 0; border-radius: 50%;
+    background: #fff;
+    color: var(--orange);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .preview-btn:hover { background: var(--orange-soft); }
+  .preview-btn:active { transform: scale(0.92); }
+  .preview-btn.playing {
+    background: var(--orange);
+    color: #fff;
+    animation: pulse-ring 0.9s ease-out infinite;
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(255,107,61,0.45); }
+    100% { box-shadow: 0 0 0 10px rgba(255,107,61,0); }
+  }
+  .preview-btn svg { width: 12px; height: 12px; display: block; }
+
+  /* 刪除按鈕 */
+  .del-btn {
+    width: 30px; height: 30px;
+    border: 0; border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 0.15s, color 0.15s;
+  }
+  .del-btn:hover { background: #fff; color: var(--red); }
+
+  /* 新增按鈕 */
+  .add-btn {
+    width: 100%;
+    padding: 0.85rem;
+    border: 2px dashed #D9CFC4;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    margin-top: 0.6rem;
+    transition: all 0.15s;
+  }
+  .add-btn:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: #FFF6F0;
+  }
+
+  /* ===== 結束音效 ===== */
+  .final-row {
+    display: grid;
+    grid-template-columns: 1fr 34px;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  /* ===== 底部 ===== */
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-top: 2rem;
+  }
+  .primary {
+    padding: 1.05rem;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--orange);
+    color: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(255,107,61,0.3);
+    transition: transform 0.1s;
+  }
+  .primary:active { transform: scale(0.97); }
+
+  .panel-foot-hint {
+    margin-top: 1.5rem;
+    padding: 0.9rem 1.05rem;
+    background: #FFF8E8;
+    border-left: 4px solid var(--yellow);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .panel-foot-hint strong { font-weight: 700; }
+
+  /* ===== Annotation header ===== */
+  .mock-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 0.5rem 1rem;
+    background: rgba(28,20,16,0.85);
+    color: #fff;
+    font-size: 0.75rem;
+    font-family: -apple-system, sans-serif;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+  .mock-header strong { color: var(--yellow); }
+</style>
+</head>
+<body>
+
+<div class="mock-header">
+  <strong>MOCKUP</strong> · settings-panel-v2 · 三欄 HMS · 警告卡片含 grip 手把與試聽 · 拖拉狀態示意:第 2 列為 .dragging
+</div>
+
+<div class="panel">
+  <!-- Header -->
+  <div class="panel-head">
+    <h2>計時器設定</h2>
+    <button class="close-btn">✕</button>
+  </div>
+
+  <!-- ============== 基本 ============== -->
+  <div class="section">
+    <span class="section-tag">基本</span>
+
+    <label class="field-label">倒數時間</label>
+    <div class="hms">
+      <div class="hms-cell">
+        <input type="number" min="0" max="23" value="0">
+        <span class="hms-unit">時</span>
+      </div>
+      <div class="hms-cell">
+        <input type="number" min="0" max="59" value="5">
+        <span class="hms-unit">分</span>
+      </div>
+      <div class="hms-cell">
+        <input type="number" min="0" max="59" value="30">
+        <span class="hms-unit">秒</span>
+      </div>
+    </div>
+
+    <div class="preset-chips">
+      <button class="chip">1 分</button>
+      <button class="chip active">5 分</button>
+      <button class="chip">10 分</button>
+      <button class="chip">15 分</button>
+      <button class="chip">30 分</button>
+      <button class="chip">1 時</button>
+    </div>
+
+    <p class="field-hint">💡 設定 30 秒可快速測試,警告里程碑會在剩 20 / 10 秒觸發</p>
+
+    <div class="toggle-row">
+      <div>
+        <div class="label-main">時間到後循環</div>
+        <div class="label-sub">適合番茄鐘、間歇任務</div>
+      </div>
+      <div class="switch"></div>
+    </div>
+  </div>
+
+  <!-- ============== 警告里程碑 ============== -->
+  <div class="section">
+    <span class="section-tag">警告里程碑</span>
+    <p class="field-hint" style="margin-top: 0.5rem; margin-bottom: 0.7rem;">
+      拖曳左側 <strong>⋮⋮</strong> 可調整觸發順序,按 ▶ 可立刻試聽音效
+    </p>
+
+    <div class="warn-list">
+
+      <!-- 列 1:正常狀態 -->
+      <div class="warn-card">
+        <div class="grip" title="拖曳排序">
+          <svg viewBox="0 0 12 18"><circle cx="3" cy="3" r="1.5" fill="currentColor"/><circle cx="9" cy="3" r="1.5" fill="currentColor"/><circle cx="3" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="3" cy="15" r="1.5" fill="currentColor"/><circle cx="9" cy="15" r="1.5" fill="currentColor"/></svg>
+        </div>
+        <input class="warn-seconds" type="number" min="1" value="60">
+        <select class="warn-select">
+          <option>🟡 黃色</option>
+          <option>🟠 橘色</option>
+          <option>🔴 紅色</option>
+        </select>
+        <select class="warn-select">
+          <option>🎐 chime</option>
+          <option selected>🔔 bell</option>
+          <option>🪘 gong</option>
+        </select>
+        <button class="preview-btn" title="試聽">
+          <svg viewBox="0 0 12 12"><path d="M3 1 L10 6 L3 11 Z" fill="currentColor"/></svg>
+        </button>
+        <button class="del-btn">✕</button>
+      </div>
+
+      <!-- 列 2:拖拉中(.dragging) -->
+      <div class="warn-card dragging">
+        <div class="grip" title="拖曳排序">
+          <svg viewBox="0 0 12 18"><circle cx="3" cy="3" r="1.5" fill="currentColor"/><circle cx="9" cy="3" r="1.5" fill="currentColor"/><circle cx="3" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="3" cy="15" r="1.5" fill="currentColor"/><circle cx="9" cy="15" r="1.5" fill="currentColor"/></svg>
+        </div>
+        <input class="warn-seconds" type="number" min="1" value="30">
+        <select class="warn-select">
+          <option>🟡 黃色</option>
+          <option selected>🟠 橘色</option>
+          <option>🔴 紅色</option>
+        </select>
+        <select class="warn-select">
+          <option>🎐 chime</option>
+          <option selected>🔔 bell</option>
+          <option>🪘 gong</option>
+        </select>
+        <button class="preview-btn playing" title="試聽中">
+          <svg viewBox="0 0 12 12"><rect x="3" y="3" width="2" height="6" fill="currentColor"/><rect x="7" y="3" width="2" height="6" fill="currentColor"/></svg>
+        </button>
+        <button class="del-btn">✕</button>
+      </div>
+
+      <!-- 列 3:正常 -->
+      <div class="warn-card">
+        <div class="grip" title="拖曳排序">
+          <svg viewBox="0 0 12 18"><circle cx="3" cy="3" r="1.5" fill="currentColor"/><circle cx="9" cy="3" r="1.5" fill="currentColor"/><circle cx="3" cy="9" r="1.5" fill="currentColor"/><circle cx="9" cy="9" r="1.5" fill="currentColor"/><circle cx="3" cy="15" r="1.5" fill="currentColor"/><circle cx="9" cy="15" r="1.5" fill="currentColor"/></svg>
+        </div>
+        <input class="warn-seconds" type="number" min="1" value="10">
+        <select class="warn-select">
+          <option>🟡 黃色</option>
+          <option>🟠 橘色</option>
+          <option selected>🔴 紅色</option>
+        </select>
+        <select class="warn-select">
+          <option>🎐 chime</option>
+          <option>🔔 bell</option>
+          <option selected>🪘 gong</option>
+        </select>
+        <button class="preview-btn" title="試聽">
+          <svg viewBox="0 0 12 12"><path d="M3 1 L10 6 L3 11 Z" fill="currentColor"/></svg>
+        </button>
+        <button class="del-btn">✕</button>
+      </div>
+
+    </div>
+
+    <button class="add-btn">＋ 新增警告里程碑</button>
+  </div>
+
+  <!-- ============== 結束音效 ============== -->
+  <div class="section">
+    <span class="section-tag">結束音效</span>
+    <div class="final-row" style="margin-top: 0.7rem;">
+      <select class="warn-select" style="font-size: 0.95rem; padding: 0.8rem 1.5rem 0.8rem 0.95rem;">
+        <option>🎐 chime</option>
+        <option>🔔 bell</option>
+        <option selected>🪘 gong</option>
+      </select>
+      <button class="preview-btn" title="試聽">
+        <svg viewBox="0 0 12 12"><path d="M3 1 L10 6 L3 11 Z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============== 底部 ============== -->
+  <div class="controls">
+    <button class="primary">✓ 設定完成</button>
+  </div>
+
+  <div class="panel-foot-hint">
+    💡 <strong>小提示:</strong>所有設定都會即時寫進網址,複製貼上就能在另一台裝置開同樣的計時器。
+  </div>
+
+</div>
+
+<script>
+  // 純展示用:點 chip / toggle / 試聽按鈕的回饋
+  document.querySelectorAll('.chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.switch').forEach(s => {
+    s.addEventListener('click', () => s.classList.toggle('on'));
+  });
+  document.querySelectorAll('.preview-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.add('playing');
+      btn.innerHTML = '<svg viewBox="0 0 12 12"><rect x="3" y="3" width="2" height="6" fill="currentColor"/><rect x="7" y="3" width="2" height="6" fill="currentColor"/></svg>';
+      setTimeout(() => {
+        btn.classList.remove('playing');
+        btn.innerHTML = '<svg viewBox="0 0 12 12"><path d="M3 1 L10 6 L3 11 Z" fill="currentColor"/></svg>';
+      }, 1200);
+    });
+  });
+</script>
+
+</body>
+</html>

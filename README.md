@@ -1,6 +1,8 @@
-# BigTimer
+# tickle
 
 可自訂警告里程碑的全螢幕倒數計時器，主要使用情境：電腦端設定好 URL 後丟到 **iPad Safari** 顯示（上課、會議、考試等現場計時）。
+
+🌐 **Live**: [https://s1041613.github.io/tickle/](https://s1041613.github.io/tickle/)
 
 > 👉 **新接手開發前的讀稿順序**：
 > 1. 這份 **README** — 專案是什麼、架構長怎樣
@@ -30,10 +32,10 @@
 ## 專案結構
 
 ```
-BigTimer/
+tickle/
 ├── index.html                          # Vite entry
 ├── mockup.html                         # 視覺設計參考（純 HTML/JS，已凍結）
-├── vite.config.ts                      # base: '/BigTimer/' (GitHub Pages subpath)
+├── vite.config.ts                      # base: '/tickle/' (GitHub Pages subpath)
 ├── vitest.config.ts                    # jsdom 環境、tests/ 為 include 範圍
 ├── tsconfig.json
 ├── package.json

@@ -27,7 +27,7 @@ export function useAudio() {
       void ctx.resume()
     }
     if (import.meta.env.DEV) {
-      console.log('[BigTimer] playSound', kind, 'ctx.state =', ctx.state)
+      console.log('[tickle] playSound', kind, 'ctx.state =', ctx.state)
     }
     const now = ctx.currentTime
 

@@ -10,7 +10,7 @@
 
 ## 一句話總結
 
-BigTimer 主要功能與 TDD 都完成，**33 個單元測試全綠**，`pnpm build` 通過，可以 `pnpm dev` 在 localhost 跑。**尚未推到 GitHub、尚未真正部署到 GitHub Pages、尚未在 iPad 實機測試**。
+tickle 已部署到 **https://s1041613.github.io/tickle/**，33 個單元測試全綠，GitHub Actions 自動 deploy 已驗證可用。**尚未在 iPad 實機測試** — 那是下一步。
 
 ---
 
@@ -109,7 +109,7 @@ BigTimer 主要功能與 TDD 都完成，**33 個單元測試全綠**，`pnpm bu
 
 ### 路線 A：先部署、實機驗證（推薦）
 1. `git init` + 寫 `.gitignore`（已有）+ 第一次 commit
-2. GitHub 建 repo `BigTimer`、push
+2. GitHub 建 repo `tickle`、push
 3. 在 repo Settings → Pages → Source 選 GitHub Actions
 4. push 觸發 Actions 跑 test → build → deploy
 5. 拿到 `https://s1041613.github.io/tickle/` URL
