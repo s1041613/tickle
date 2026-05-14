@@ -4,6 +4,7 @@ import { SOUND_LABELS } from '../types'
 import SectionTag from './SectionTag.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import WarningCard from './WarningCard.vue'
+import DurationHmsInput from './DurationHmsInput.vue'
 
 const props = defineProps<{
   open: boolean
@@ -23,11 +24,6 @@ const emit = defineEmits<{
 }>()
 
 const soundKeys = Object.keys(SOUND_LABELS) as SoundKey[]
-
-function updateDuration(e: Event) {
-  const v = Number((e.target as HTMLInputElement).value)
-  if (Number.isFinite(v) && v > 0) emit('update:duration', Math.floor(v))
-}
 
 function updateWarning(updated: Warning) {
   emit('update:warnings', props.warnings.map((w) => (w.id === updated.id ? updated : w)))
@@ -68,14 +64,8 @@ function updateFinal(e: Event) {
 
     <SectionTag>基本</SectionTag>
     <div class="mt-3 mb-4">
-      <label class="block text-sm mb-2 font-semibold text-muted">倒數時間（秒）</label>
-      <input
-        type="number"
-        :value="duration"
-        min="1"
-        @input="updateDuration"
-        class="w-full px-[1.1rem] py-[0.85rem] border-2 border-transparent bg-bg rounded-[20px] text-base font-semibold text-ink focus:outline-none focus:border-orange focus:bg-white transition-colors"
-      />
+      <label class="block text-sm mb-2 font-semibold text-muted">倒數時間</label>
+      <DurationHmsInput :model-value="duration" @update:model-value="$emit('update:duration', $event)" />
       <div class="text-xs text-muted mt-1.5">
         💡 設定 30 秒可快速測試，警告里程碑會在剩 20 / 10 秒觸發
       </div>
