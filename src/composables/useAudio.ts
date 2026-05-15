@@ -41,6 +41,20 @@ const bufferLoading = new Map<BufferKey, Promise<AudioBuffer>>()
 // per-call factory but the underlying audio state is global.
 let currentClap: { src: AudioBufferSourceNode; gain: GainNode } | null = null
 
+// Same idea for drumGong, which has two layered buffer sources (strike + resonance)
+// routed through a shared master gain. stopAll() fades the master and stops both.
+let currentDrumGong: {
+  dSrc: AudioBufferSourceNode
+  cSrc: AudioBufferSourceNode
+  master: GainNode
+} | null = null
+
+// Track every still-scheduled oscillator + its gain so stopAll() can silence
+// them when the timer state changes (start/pause/reset/restart). Synthesized
+// tones don't expose onended cleanly across browsers; we register cleanup
+// via setTimeout matching the scheduled stop time.
+const activeTones = new Set<{ osc: OscillatorNode; gain: GainNode }>()
+
 function getCtx(): AudioContext {
   if (!audioCtx) {
     const Ctor =
@@ -129,6 +143,13 @@ function scheduleTone(ctx: AudioContext, now: number, def: OscDef): void {
   osc.connect(gain).connect(ctx.destination)
   osc.start(start)
   osc.stop(endAt + 0.05)
+
+  const entry = { osc, gain }
+  activeTones.add(entry)
+  // Drop from the active set once the scheduled tail finishes, so a later
+  // stopAll() doesn't try to stop nodes the browser already cleaned up.
+  const lifetimeMs = Math.max(0, (endAt + 0.1 - now) * 1000)
+  setTimeout(() => activeTones.delete(entry), lifetimeMs)
 }
 
 // 50ms exponential fade-out before tearing down the current clap, so a new
@@ -146,6 +167,24 @@ function stopCurrentClap(ctx: AudioContext): void {
     // Already stopped — ignore.
   }
   currentClap = null
+}
+
+// 50ms exponential fade on the shared master gain so both layered sources
+// drop together without click, then stop the underlying buffer sources.
+function stopCurrentDrumGong(ctx: AudioContext): void {
+  if (!currentDrumGong) return
+  const { dSrc, cSrc, master } = currentDrumGong
+  const now = ctx.currentTime
+  try {
+    master.gain.cancelScheduledValues(now)
+    master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), now)
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 0.05)
+    dSrc.stop(now + 0.06)
+    cSrc.stop(now + 0.06)
+  } catch {
+    // Already stopped — ignore.
+  }
+  currentDrumGong = null
 }
 
 function playClapBuffer(ctx: AudioContext, kind: 'polite' | 'cheer'): void {
@@ -200,6 +239,10 @@ function playDrumGong(ctx: AudioContext): void {
     return
   }
 
+  // A new strike supersedes any in-flight drumGong; stop the previous one
+  // so overlapping presses don't pile up.
+  stopCurrentDrumGong(ctx)
+
   const now = ctx.currentTime
 
   // Master gain — prevents clipping when D(1.3) + C(0.35) peaks overlap.
@@ -229,6 +272,41 @@ function playDrumGong(ctx: AudioContext): void {
   cGain.gain.exponentialRampToValueAtTime(0.0001, fadeOutEnd)
   cSrc.connect(cGain).connect(master)
   cSrc.start(now)
+
+  currentDrumGong = { dSrc, cSrc, master }
+  dSrc.onended = () => {
+    if (currentDrumGong?.dSrc === dSrc) {
+      // Only clear when the resonance has also faded; the strike ends first.
+    }
+  }
+  cSrc.onended = () => {
+    if (currentDrumGong?.cSrc === cSrc) currentDrumGong = null
+  }
+}
+
+// Hard-stop every scheduled sound. Used when the timer state changes (start /
+// pause / reset / restart / repeat re-arm) so audio never outlives its run.
+// We schedule a 5ms linear ramp to ~0 before .stop() to avoid the audible
+// click that comes from cutting a sine mid-cycle on iPad Safari.
+function stopAllSounds(): void {
+  if (!audioCtx) return
+  const ctx = audioCtx
+  const now = ctx.currentTime
+
+  for (const { osc, gain } of activeTones) {
+    try {
+      gain.gain.cancelScheduledValues(now)
+      gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now)
+      gain.gain.linearRampToValueAtTime(0.0001, now + 0.005)
+      osc.stop(now + 0.01)
+    } catch {
+      // Already stopped — ignore.
+    }
+  }
+  activeTones.clear()
+
+  stopCurrentClap(ctx)
+  stopCurrentDrumGong(ctx)
 }
 
 export function useAudio() {
@@ -304,5 +382,9 @@ export function useAudio() {
     }
   }
 
-  return { ensureAudio, playSound, preloadSound, unlocked }
+  function stopAll(): void {
+    stopAllSounds()
+  }
+
+  return { ensureAudio, playSound, preloadSound, stopAll, unlocked }
 }
