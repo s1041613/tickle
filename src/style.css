@@ -16,8 +16,8 @@
   --color-warn-red-text: #C42028;
 
   --shadow-card: 0 8px 32px rgb(28 20 16 / 0.06);
-  --shadow-orange: 0 8px 24px rgb(255 107 61 / 0.35);
-  --shadow-orange-lg: 0 12px 28px rgb(255 107 61 / 0.45);
+  --shadow-orange: 0 4px 14px rgb(255 107 61 / 0.18);
+  --shadow-orange-lg: 0 6px 18px rgb(255 107 61 / 0.25);
   --shadow-panel: 0 20px 60px rgb(28 20 16 / 0.15);
 
   --font-display: "SF Pro Display", -apple-system, sans-serif;

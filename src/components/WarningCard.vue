@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Warning, ColorKey, SoundKey } from '../types'
 import { COLOR_LABELS, SOUND_LABELS, WARNING_SOUND_KEYS } from '../types'
+import IconClose from './icons/IconClose.vue'
 
 const props = defineProps<{
   warning: Warning
@@ -131,10 +132,10 @@ function updateSound(e: Event) {
     <button
       type="button"
       @click="emit('delete', warning.id)"
-      class="w-[30px] h-[30px] rounded-full bg-transparent text-muted border-0 cursor-pointer text-[0.95rem] flex items-center justify-center transition-colors hover:bg-white hover:text-red"
+      class="w-[30px] h-[30px] rounded-full bg-transparent text-muted border-0 cursor-pointer flex items-center justify-center transition-colors hover:bg-white hover:text-red"
       aria-label="刪除"
     >
-      ✕
+      <IconClose class="w-3.5 h-3.5" />
     </button>
   </div>
 </template>

@@ -6,6 +6,7 @@ import SectionTag from './SectionTag.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import WarningCard from './WarningCard.vue'
 import DurationHmsInput from './DurationHmsInput.vue'
+import IconCheck from './icons/IconCheck.vue'
 
 const props = defineProps<{
   open: boolean
@@ -241,9 +242,10 @@ function onFinalPreview() {
 
     <button
       @click="emit('close')"
-      class="cta-done w-full mt-6 border-0 rounded-[20px] text-base cursor-pointer active:scale-[0.97] transition-transform"
+      class="cta-done w-full mt-6 border-0 rounded-[20px] text-base cursor-pointer active:scale-[0.97] transition-transform inline-flex items-center justify-center gap-2"
     >
-      ✓ 設定完成
+      <IconCheck class="w-5 h-5" />
+      <span>設定完成</span>
     </button>
   </aside>
 </template>
