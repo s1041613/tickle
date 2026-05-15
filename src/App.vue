@@ -178,20 +178,20 @@ const pointerInside = ref(false)
         v-if="timer.status.value === 'paused' || timer.status.value === 'done'"
         @click="handleReset"
         class="h-14 w-14 rounded-full border-0 cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
-        :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-ink'"
+        :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-muted'"
         aria-label="重設"
         title="重設"
       >
-        <IconReset class="w-6 h-6" />
+        <IconReset class="w-5 h-5" />
       </button>
       <button
         @click="panelOpen = true"
         class="h-14 w-14 rounded-full border-0 cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
-        :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-ink'"
+        :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-muted'"
         aria-label="設定"
         title="設定"
       >
-        <IconSettings class="w-6 h-6" />
+        <IconSettings class="w-5 h-5" />
       </button>
     </div>
 
