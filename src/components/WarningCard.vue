@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Warning, ColorKey, SoundKey } from '../types'
-import { COLOR_LABELS, SOUND_LABELS } from '../types'
+import { COLOR_LABELS, SOUND_LABELS, WARNING_SOUND_KEYS } from '../types'
 
 const props = defineProps<{
   warning: Warning
@@ -30,7 +30,7 @@ function onDragStart(e: DragEvent) {
 }
 
 const colorKeys = Object.keys(COLOR_LABELS) as ColorKey[]
-const soundKeys = Object.keys(SOUND_LABELS) as SoundKey[]
+const soundKeys = WARNING_SOUND_KEYS
 
 // Note: @dragover.prevent and @drop.prevent are required for drop to fire; .prevent prevents default dragover behavior
 function updateAt(e: Event) {
