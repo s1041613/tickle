@@ -165,9 +165,10 @@ const pointerInside = ref(false)
         {{ primaryButton.label }}
       </button>
       <button
-        v-if="timer.status.value === 'paused'"
+        v-if="timer.status.value === 'paused' || timer.status.value === 'done'"
         @click="handleReset"
-        class="h-14 w-14 rounded-full border-0 text-xl font-bold cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center bg-white text-ink"
+        class="h-14 w-14 rounded-full border-0 text-xl font-bold cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
+        :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-ink'"
         aria-label="重設"
         title="重設"
       >
