@@ -11,6 +11,10 @@ import { useFullscreen } from './composables/useFullscreen'
 import TimerDisplay from './components/TimerDisplay.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import AudioUnlockOverlay from './components/AudioUnlockOverlay.vue'
+import IconPlay from './components/icons/IconPlay.vue'
+import IconPause from './components/icons/IconPause.vue'
+import IconReset from './components/icons/IconReset.vue'
+import IconSettings from './components/icons/IconSettings.vue'
 
 const duration = ref(10)
 const repeat = ref(false)
@@ -103,10 +107,10 @@ function handlePanelClose() {
 
 const primaryButton = computed(() => {
   const s = timer.status.value
-  if (s === 'running') return { label: '⏸ 暫停', action: 'pause' as const }
-  if (s === 'done') return { label: '▶ 再來一次', action: 'restart' as const }
-  if (s === 'paused') return { label: '▶ 繼續', action: 'start' as const }
-  return { label: '▶ 開始', action: 'start' as const }
+  if (s === 'running') return { icon: 'pause' as const, text: '暫停', action: 'pause' as const }
+  if (s === 'done') return { icon: 'play' as const, text: '再來一次', action: 'restart' as const }
+  if (s === 'paused') return { icon: 'play' as const, text: '繼續', action: 'start' as const }
+  return { icon: 'play' as const, text: '開始', action: 'start' as const }
 })
 
 function handlePrimary() {
@@ -166,26 +170,28 @@ const pointerInside = ref(false)
         class="h-14 px-7 rounded-full border-0 text-base font-bold cursor-pointer shadow-orange hover:shadow-orange-lg hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center gap-2 min-w-[120px] justify-center"
         :class="visualState === 'done' ? 'bg-white text-orange' : 'bg-orange text-white'"
       >
-        {{ primaryButton.label }}
+        <IconPlay v-if="primaryButton.icon === 'play'" class="w-5 h-5" />
+        <IconPause v-else class="w-5 h-5" />
+        <span>{{ primaryButton.text }}</span>
       </button>
       <button
         v-if="timer.status.value === 'paused' || timer.status.value === 'done'"
         @click="handleReset"
-        class="h-14 w-14 rounded-full border-0 text-xl font-bold cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
+        class="h-14 w-14 rounded-full border-0 cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
         :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-ink'"
         aria-label="重設"
         title="重設"
       >
-        ↻
+        <IconReset class="w-6 h-6" />
       </button>
       <button
         @click="panelOpen = true"
-        class="h-14 w-14 rounded-full border-0 text-xl font-bold cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
+        class="h-14 w-14 rounded-full border-0 cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
         :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-ink'"
         aria-label="設定"
         title="設定"
       >
-        ⚙
+        <IconSettings class="w-6 h-6" />
       </button>
     </div>
 
