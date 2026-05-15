@@ -12,13 +12,17 @@ import TimerDisplay from './components/TimerDisplay.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import AudioUnlockOverlay from './components/AudioUnlockOverlay.vue'
 
-const duration = ref(300)
+const duration = ref(10)
 const repeat = ref(false)
 const warnings = ref<Warning[]>([
-  { id: 1, at: 60, color: 'yellow', sound: 'chime' },
-  { id: 2, at: 30, color: 'orange', sound: 'bell' },
+  { id: 1, at: 10, color: 'yellow', sound: 'bell' },
+  { id: 2, at: 5, color: 'orange', sound: 'bell' },
+  { id: 3, at: 4, color: 'red', sound: 'bell' },
+  { id: 4, at: 3, color: 'red', sound: 'bell' },
+  { id: 5, at: 2, color: 'red', sound: 'bell' },
+  { id: 6, at: 1, color: 'red', sound: 'bell' },
 ])
-const finalSound = ref<SoundKey>('gong')
+const finalSound = ref<SoundKey>('cheer')
 
 const { ensureAudio, playSound, preloadSound, stopAll, unlocked } = useAudio()
 const timer = useTimer()
