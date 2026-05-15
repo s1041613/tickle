@@ -19,7 +19,7 @@ const warnings = ref<Warning[]>([
 ])
 const finalSound = ref<SoundKey>('gong')
 
-const { ensureAudio, playSound, preloadSound, unlocked } = useAudio()
+const { ensureAudio, playSound, preloadSound, stopAll, unlocked } = useAudio()
 const timer = useTimer()
 
 // Apply initial duration so the display shows the right value on first paint.
@@ -48,6 +48,9 @@ timer.onDone(() => {
   playSound(finalSound.value)
   if (repeat.value) {
     setTimeout(() => {
+      // Silence any final-sound tail (e.g. a long clap) before the next run
+      // begins, so audio never bleeds across runs.
+      stopAll()
       timer.start()
     }, 1500)
   }
@@ -65,16 +68,19 @@ async function handleUnlock() {
 }
 
 function handleStart() {
+  stopAll()
   timer.setDuration(duration.value)
   timer.start()
   panelOpen.value = false
 }
 
 function handlePause() {
+  stopAll()
   timer.pause()
 }
 
 function handleReset() {
+  stopAll()
   timer.reset()
   timer.setDuration(duration.value)
 }
