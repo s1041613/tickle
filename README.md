@@ -19,6 +19,7 @@
 - Wake Lock 防止 iPad 自動鎖屏
 - Tab title 顯示剩餘時間
 - 所有設定即時同步進 URL（複製貼上就能在另一台裝置開同樣的計時器）
+- 桌面瀏覽器右上角全螢幕按鈕（Fullscreen API；iPad Safari 自動隱藏）
 
 ## 技術棧
 
@@ -61,7 +62,8 @@ tickle/
 │       ├── useAudio.ts                 # AudioContext + Web Audio 合成 gong/bell/chime + 解鎖
 │       ├── useUrlSync.ts               # URLSearchParams ↔ 設定 ref 雙向同步（含 parseWarnings / serializeWarnings）
 │       ├── useWakeLock.ts              # Screen Wake Lock API（iOS 17+），visibilitychange 重新請求
-│       └── useTabTitle.ts              # document.title 隨 status / formatted 更新
+│       ├── useTabTitle.ts              # document.title 隨 status / formatted 更新
+│       └── useFullscreen.ts            # Fullscreen API toggle + fullscreenchange 同步 + webkit prefix fallback
 │
 ├── tests/
 │   ├── setup.ts                        # 全域 afterEach 還原 timers + mocks
@@ -93,6 +95,7 @@ tickle/
 | `useUrlSync` | 4 個設定 ref | — | URLSearchParams + history.replaceState |
 | `useWakeLock` | `status` | — | navigator.wakeLock + visibilitychange |
 | `useTabTitle` | `formatted`, `status` | — | document.title |
+| `useFullscreen` | — | `isFullscreen`, `isSupported`, `toggle` | document.requestFullscreen + fullscreenchange |
 
 `App.vue` 是組裝層：建立四個設定 ref（`duration` / `repeat` / `warnings` / `finalSound`），用 composable 把它們接到 timer 行為與 UI 元件上。
 

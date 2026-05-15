@@ -159,4 +159,23 @@
     animation: pulse-ring 0.9s ease-out infinite;
   }
   .preview-btn svg { width: 12px; height: 12px; display: block; }
+
+  /* ===== Fullscreen toggle (top-right, hover-reveal) ===== */
+  .fs-btn {
+    background: rgb(28 20 16 / 0.08);
+    color: var(--color-ink);
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+  .fs-btn:hover {
+    background: rgb(28 20 16 / 0.16);
+    transform: translateY(-1px);
+  }
+  /* In done state, the orange background makes black/8 invisible — invert. */
+  .state-done .fs-btn {
+    background: rgb(255 255 255 / 0.22);
+    color: #fff;
+  }
+  .state-done .fs-btn:hover {
+    background: rgb(255 255 255 / 0.36);
+  }
 }

@@ -7,6 +7,7 @@ import { useMilestones } from './composables/useMilestones'
 import { useUrlSync } from './composables/useUrlSync'
 import { useWakeLock } from './composables/useWakeLock'
 import { useTabTitle } from './composables/useTabTitle'
+import { useFullscreen } from './composables/useFullscreen'
 import TimerDisplay from './components/TimerDisplay.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import AudioUnlockOverlay from './components/AudioUnlockOverlay.vue'
@@ -36,6 +37,7 @@ watch(duration, (v) => {
 useUrlSync({ duration, repeat, warnings, finalSound })
 useWakeLock(timer.status)
 useTabTitle(timer.formatted, timer.status)
+const fullscreen = useFullscreen()
 
 const { visualState } = useMilestones(
   timer.remainSec,
@@ -108,12 +110,16 @@ function handlePrimary() {
 }
 
 const bodyClass = computed(() => `state-${visualState.value}`)
+
+const pointerInside = ref(false)
 </script>
 
 <template>
   <div
     :class="[bodyClass, { 'panel-open': panelOpen }]"
     class="fixed inset-0 transition-colors duration-500"
+    @mouseenter="pointerInside = true"
+    @mouseleave="pointerInside = false"
   >
     <AudioUnlockOverlay v-if="!unlocked" @unlock="handleUnlock" />
 
@@ -121,6 +127,28 @@ const bodyClass = computed(() => `state-${visualState.value}`)
       :formatted="timer.formatted.value"
       :state="visualState"
     />
+
+    <Transition
+      enter-active-class="transition-opacity duration-300"
+      leave-active-class="transition-opacity duration-300"
+      enter-from-class="opacity-0"
+      leave-to-class="opacity-0"
+    >
+      <button
+        v-if="fullscreen.isSupported.value && pointerInside"
+        @click="fullscreen.toggle()"
+        class="fs-btn fixed top-7 right-7 h-11 w-11 rounded-full border-0 cursor-pointer inline-flex items-center justify-center"
+        :aria-label="fullscreen.isFullscreen.value ? '退出全螢幕' : '進入全螢幕'"
+        :title="fullscreen.isFullscreen.value ? '退出全螢幕' : '進入全螢幕'"
+      >
+        <svg v-if="!fullscreen.isFullscreen.value" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+        </svg>
+        <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+        </svg>
+      </button>
+    </Transition>
 
     <div class="fixed bottom-7 right-7 flex items-center gap-3">
       <button
