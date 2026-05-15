@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Warning, SoundKey } from '../types'
-import { SOUND_LABELS } from '../types'
+import { SOUND_LABELS, FINAL_SOUND_KEYS } from '../types'
 import SectionTag from './SectionTag.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import WarningCard from './WarningCard.vue'
@@ -25,7 +25,7 @@ const emit = defineEmits<{
   'update:finalSound': [v: SoundKey]
 }>()
 
-const soundKeys = Object.keys(SOUND_LABELS) as SoundKey[]
+const soundKeys = FINAL_SOUND_KEYS
 
 const PRESETS = [
   { seconds: 60, label: '1 分' },

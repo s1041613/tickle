@@ -31,3 +31,6 @@ export const SOUND_LABELS: Record<SoundKey, string> = {
   cheer: '🎉 cheer',
   drumGong: '🥁 drumGong',
 }
+
+export const WARNING_SOUND_KEYS: SoundKey[] = ['chime', 'bell', 'gong']
+export const FINAL_SOUND_KEYS: SoundKey[] = ['chime', 'bell', 'gong', 'polite', 'cheer', 'drumGong']

@@ -72,7 +72,7 @@ export function useUrlSync(refs: UrlSyncRefs) {
     if (refs.warnings.value.length > 0) {
       p.set('warn', serializeWarnings(refs.warnings.value))
     }
-    if (refs.finalSound.value !== 'gong') {
+    if (refs.finalSound.value !== 'cheer') {
       p.set('final', refs.finalSound.value)
     }
     const qs = p.toString()
