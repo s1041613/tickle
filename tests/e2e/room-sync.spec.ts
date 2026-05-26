@@ -305,6 +305,52 @@ test('#8 clock accuracy: timer text matches within 200ms between host + viewer',
   await viewer.context.close()
 })
 
+test('#10 (B7) two tabs same room: pause on A → both A and B show identical seconds', async ({ browser }) => {
+  // Notion B7: 同時開兩個網頁，如果在A網頁暫停, 從 sidebar 切換到 B 網頁
+  // 只會暫停！但秒數不會更新到A網頁的秒數
+  //
+  // We interpret "切換到 B 網頁" as: backgrounding A and foregrounding B
+  // (sidebar tab switching). Spec: both pages show the same paused time.
+  const host = await openHost(browser)
+  await primaryButton(host.page).click() // start
+  await expect(primaryButton(host.page)).toHaveText(/暫停/)
+
+  // Open viewer.
+  const viewer = await openViewer(browser, host.viewerUrl)
+  await expect(viewer.page.locator('div').filter({ hasText: /^\d{1,2}:\d{2}$/ }).first()).toBeVisible()
+
+  // Run for ~2 seconds so the timer is mid-countdown.
+  await host.page.waitForTimeout(2000)
+
+  // Background the viewer tab (simulates sidebar switching away from B).
+  await viewer.page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', writable: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+
+  // Pause on host.
+  await primaryButton(host.page).click()
+  await expect(primaryButton(host.page)).toHaveText(/繼續/)
+  await host.page.waitForTimeout(800) // let the patch reach the server
+
+  // Foreground the viewer again.
+  await viewer.page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', writable: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+
+  // Give the viewer a beat to apply any catch-up state.
+  await viewer.page.waitForTimeout(800)
+
+  // The two pages must now show the exact same time (both paused).
+  const hostText = await readTimer(host.page)
+  const viewerText = await readTimer(viewer.page)
+  expect(viewerText, 'viewer must match host after foreground').toBe(hostText)
+
+  await host.context.close()
+  await viewer.context.close()
+})
+
 test('#9 duplicate host tab → first tab gets KickedRibbon', async ({ browser }) => {
   const host1 = await openHost(browser)
   // Confirm host1 is fully connected before opening host2.
