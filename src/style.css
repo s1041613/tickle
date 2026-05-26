@@ -170,12 +170,17 @@
     background: rgb(28 20 16 / 0.16);
     transform: translateY(-1px);
   }
-  /* In done state, the orange background makes black/8 invisible — invert. */
-  .state-done .fs-btn {
+  /* In done state, the orange background makes black/8 invisible — invert.
+   * .share-btn lives here too (not in ShareButton.vue's scoped block)
+   * because Vue's `:global()` + Tailwind v4 can swallow the descendant
+   * combinator and end up restyling `.state-done` itself. */
+  .state-done .fs-btn,
+  .state-done .share-btn {
     background: rgb(255 255 255 / 0.22);
     color: #fff;
   }
-  .state-done .fs-btn:hover {
+  .state-done .fs-btn:hover,
+  .state-done .share-btn:hover {
     background: rgb(255 255 255 / 0.36);
   }
 }

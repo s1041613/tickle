@@ -56,15 +56,10 @@ defineEmits<{ click: [] }>()
   }
 }
 
-/* Inverse-contrast version for the `state-done` orange background — same
- * mechanic as .fs-btn so the two corner buttons stay visually paired. */
-:global(.state-done) .share-btn {
-  background: rgb(255 255 255 / 0.22);
-  color: #fff;
-}
-@media (hover: hover) {
-  :global(.state-done) .share-btn:hover {
-    background: rgb(255 255 255 / 0.34);
-  }
-}
+/* Inverse-contrast version for the `state-done` orange background lives
+ * in src/style.css (alongside .state-done .fs-btn) because Vue's
+ * `:global()` selector under Tailwind v4 can swallow the descendant
+ * combinator and end up restyling .state-done itself — which turns the
+ * countdown end screen white instead of orange.
+ */
 </style>
