@@ -25,6 +25,10 @@ import ShareDialog from './components/ShareDialog.vue'
 import RoomNotFoundScreen from './components/RoomNotFoundScreen.vue'
 import KickedRibbon from './components/KickedRibbon.vue'
 import ViewerBadge from './components/ViewerBadge.vue'
+import IconPlay from './components/icons/IconPlay.vue'
+import IconPause from './components/icons/IconPause.vue'
+import IconReset from './components/icons/IconReset.vue'
+import IconSettings from './components/icons/IconSettings.vue'
 import type { RoomStatePatch } from '../party/types'
 
 // -------- Settings refs (still the source of truth on host; mirror on viewer) --------
@@ -34,13 +38,17 @@ import type { RoomStatePatch } from '../party/types'
 // written by user input (because UI is disabled). The patch-watcher is
 // gated by `isHost` + `applyingFromServer` so server-driven updates
 // don't echo back as patches.
-const duration = ref(300)
+const duration = ref(10)
 const repeat = ref(false)
 const warnings = ref<Warning[]>([
-  { id: 1, at: 60, color: 'yellow', sound: 'chime' },
-  { id: 2, at: 30, color: 'orange', sound: 'bell' },
+  { id: 1, at: 10, color: 'yellow', sound: 'bell' },
+  { id: 2, at: 5, color: 'orange', sound: 'bell' },
+  { id: 3, at: 4, color: 'red', sound: 'bell' },
+  { id: 4, at: 3, color: 'red', sound: 'bell' },
+  { id: 5, at: 2, color: 'red', sound: 'bell' },
+  { id: 6, at: 1, color: 'red', sound: 'bell' },
 ])
-const finalSound = ref<SoundKey>('gong')
+const finalSound = ref<SoundKey>('cheer')
 
 // -------- Audio / Timer / Fullscreen wiring --------
 const { ensureAudio, playSound, preloadSound, stopAll, unlocked } = useAudio()
@@ -307,10 +315,10 @@ function handlePanelClose() {
 
 const primaryButton = computed(() => {
   const s = timer.status.value
-  if (s === 'running') return { label: '⏸ 暫停', action: 'pause' as const }
-  if (s === 'done') return { label: '▶ 再來一次', action: 'restart' as const }
-  if (s === 'paused') return { label: '▶ 繼續', action: 'start' as const }
-  return { label: '▶ 開始', action: 'start' as const }
+  if (s === 'running') return { icon: 'pause' as const, text: '暫停', action: 'pause' as const }
+  if (s === 'done') return { icon: 'play' as const, text: '再來一次', action: 'restart' as const }
+  if (s === 'paused') return { icon: 'play' as const, text: '繼續', action: 'start' as const }
+  return { icon: 'play' as const, text: '開始', action: 'start' as const }
 })
 
 function handlePrimary() {
@@ -448,27 +456,30 @@ async function handleShareCopy(): Promise<void> {
         class="h-14 px-7 rounded-full border-0 text-base font-bold cursor-pointer shadow-orange hover:shadow-orange-lg hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center gap-2 min-w-[120px] justify-center disabled:opacity-45 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none disabled:saturate-[0.4]"
         :class="visualState === 'done' ? 'bg-white text-orange' : 'bg-orange text-white'"
       >
-        {{ primaryButton.label }}
+        <IconPlay v-if="primaryButton.icon === 'play'" class="w-5 h-5" />
+        <IconPause v-else class="w-5 h-5" />
+        <span>{{ primaryButton.text }}</span>
       </button>
       <button
-        v-if="timer.status.value === 'paused'"
+        v-if="timer.status.value === 'paused' || timer.status.value === 'done'"
         @click="handleReset"
         :disabled="isControlsDisabled"
         :aria-disabled="isControlsDisabled || undefined"
-        class="h-14 w-14 rounded-full border-0 text-xl font-bold cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center bg-white text-ink disabled:opacity-45 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none disabled:saturate-[0.4]"
+        class="h-14 w-14 rounded-full border-0 cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center disabled:opacity-45 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none disabled:saturate-[0.4]"
+        :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-muted'"
         aria-label="重設"
         title="重設"
       >
-        ↻
+        <IconReset class="w-5 h-5" />
       </button>
       <button
         @click="panelOpen = true"
-        class="h-14 w-14 rounded-full border-0 text-xl font-bold cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
-        :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-ink'"
+        class="h-14 w-14 rounded-full border-0 cursor-pointer shadow-card hover:-translate-y-0.5 active:translate-y-0 transition-all inline-flex items-center justify-center"
+        :class="visualState === 'done' ? 'bg-white/90 text-orange' : 'bg-white text-muted'"
         aria-label="設定"
         title="設定"
       >
-        ⚙
+        <IconSettings class="w-5 h-5" />
       </button>
     </div>
 
