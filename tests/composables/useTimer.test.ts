@@ -156,6 +156,126 @@ describe('useTimer', () => {
     expect(cb2).toHaveBeenCalledTimes(1)
   })
 
+  describe('startWithEndAt (viewer-mode entry point)', () => {
+    it('TS1: starts running with remainSec computed from the passed endAtMs', () => {
+      // Pin Date.now() so we can predict the endAt arithmetic exactly.
+      vi.setSystemTime(1_000_000)
+      timer.startWithEndAt(1_000_000 + 30_000)
+
+      // First paint should be correct immediately (no need to flush a RAF tick first).
+      expect(timer.status.value).toBe('running')
+      expect(timer.remainSec.value).toBeCloseTo(30, 5)
+    })
+
+    it('TS2: does NOT reset totalSec — preserves the value setDuration left behind', () => {
+      timer.setDuration(60)
+      vi.setSystemTime(1_000_000)
+      timer.startWithEndAt(1_000_000 + 30_000)
+
+      // totalSec is the caller's display anchor (progress-bar denominator).
+      // start() would have nuked it to match the new countdown; startWithEndAt must not.
+      expect(timer.totalSec.value).toBe(60)
+      expect(timer.remainSec.value).toBeCloseTo(30, 5)
+    })
+
+    it('TS3: remainSec decreases as time advances (RAF-driven tick still runs)', () => {
+      vi.setSystemTime(1_000_000)
+      timer.startWithEndAt(1_000_000 + 30_000)
+
+      // Advance 10 real-ish seconds + a RAF tick so `tick()` re-reads Date.now().
+      vi.advanceTimersByTime(10_000)
+      vi.advanceTimersByTime(16)
+
+      expect(timer.remainSec.value).toBeCloseTo(20, 1)
+      expect(timer.status.value).toBe('running')
+    })
+
+    it('TS4: endAt already in the past → immediately done + onDone fires once', () => {
+      const doneCb = vi.fn()
+      timer.onDone(doneCb)
+      vi.setSystemTime(1_000_000)
+
+      timer.startWithEndAt(999_000) // 1 second in the past
+
+      expect(timer.status.value).toBe('done')
+      expect(timer.remainSec.value).toBe(0)
+      expect(doneCb).toHaveBeenCalledTimes(1)
+    })
+
+    it('TS4b: endAt exactly at now → also done (boundary check, matches tick()\'s <=0 guard)', () => {
+      const doneCb = vi.fn()
+      timer.onDone(doneCb)
+      vi.setSystemTime(1_000_000)
+
+      timer.startWithEndAt(1_000_000)
+
+      expect(timer.status.value).toBe('done')
+      expect(timer.remainSec.value).toBe(0)
+      expect(doneCb).toHaveBeenCalledTimes(1)
+    })
+
+    it('TS5: calling startWithEndAt while another timer is running cancels the previous RAF', () => {
+      // First start() schedules a RAF loop; calling startWithEndAt() must
+      // cancel it before scheduling a new one — otherwise we'd get two
+      // tick() invocations per frame (one updating to stale endAtMs from
+      // start(), one to the new one), causing flicker.
+      timer.setDuration(60)
+      timer.start()
+      vi.setSystemTime(2_000_000)
+      timer.startWithEndAt(2_000_000 + 10_000)
+
+      // After a tick, remainSec should reflect the NEW endAt (~10), not
+      // the old start()-derived ~60. If two RAFs were racing this number
+      // would oscillate / settle on the wrong value.
+      vi.advanceTimersByTime(16)
+      expect(timer.remainSec.value).toBeCloseTo(10, 1)
+      expect(timer.status.value).toBe('running')
+    })
+
+    it('TS6: pause works against startWithEndAt-launched timer', () => {
+      vi.setSystemTime(1_000_000)
+      timer.startWithEndAt(1_000_000 + 30_000)
+      vi.advanceTimersByTime(5_000)
+      vi.advanceTimersByTime(16)
+      const beforePause = timer.remainSec.value
+
+      timer.pause()
+      expect(timer.status.value).toBe('paused')
+
+      // Time passes while paused — remainSec must stay frozen.
+      vi.advanceTimersByTime(10_000)
+      expect(timer.remainSec.value).toBe(beforePause)
+    })
+
+    it('TS7: reset clears state back to idle even after startWithEndAt', () => {
+      timer.setDuration(60)
+      vi.setSystemTime(1_000_000)
+      timer.startWithEndAt(1_000_000 + 30_000)
+      vi.advanceTimersByTime(5_000)
+      vi.advanceTimersByTime(16)
+
+      timer.reset()
+      expect(timer.status.value).toBe('idle')
+      // reset() snaps remainSec back to totalSec (60), not to whatever
+      // the running countdown happened to be at.
+      expect(timer.remainSec.value).toBe(60)
+    })
+
+    it('TS8: onDone callbacks fire once when countdown via startWithEndAt naturally hits zero', () => {
+      const doneCb = vi.fn()
+      timer.onDone(doneCb)
+      vi.setSystemTime(1_000_000)
+      timer.startWithEndAt(1_000_000 + 2_000) // 2 seconds out
+
+      // Advance well past 2 seconds with RAF ticks.
+      for (let i = 0; i < 200; i++) vi.advanceTimersByTime(16)
+
+      expect(timer.status.value).toBe('done')
+      expect(timer.remainSec.value).toBe(0)
+      expect(doneCb).toHaveBeenCalledTimes(1)
+    })
+  })
+
   describe('formatted - cross-hour', () => {
     it('should format 4675s as 1:17:55', () => {
       timer.setDuration(4675)
