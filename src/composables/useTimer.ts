@@ -47,6 +47,43 @@ export function useTimer() {
     rafId = requestAnimationFrame(tick)
   }
 
+  /**
+   * Begin counting down toward an externally-provided `endAtMs`.
+   *
+   * Use case: viewer mode. The host computed `endAtMs` against the
+   * authoritative server clock and broadcast it; we run the same number
+   * locally so all clients converge on the same display.
+   *
+   * Contract differences from `start()`:
+   *   - Does NOT reset `totalSec` — the caller controls that separately
+   *     via `setDuration()`.
+   *   - Does NOT use `Date.now() + totalSec * 1000` — uses the supplied
+   *     `endAtMs` verbatim. Caller has already incorporated any clock
+   *     offset.
+   *   - Initial `remainSec` is computed immediately from the passed
+   *     `endAtMs` so the first paint is correct (no waiting for the
+   *     first rAF tick).
+   *   - If `endAtMs` is already in the past, transitions straight to
+   *     `done` and fires onDone callbacks — keeps the state machine
+   *     consistent with `tick()`.
+   */
+  function startWithEndAt(at: number): void {
+    if (rafId !== null) cancelAnimationFrame(rafId)
+    rafId = null
+    endAtMs = at
+    const now = Date.now()
+    const remaining = (endAtMs - now) / 1000
+    if (remaining <= 0) {
+      remainSec.value = 0
+      status.value = 'done'
+      onDoneCallbacks.forEach((cb) => cb())
+      return
+    }
+    remainSec.value = remaining
+    status.value = 'running'
+    rafId = requestAnimationFrame(tick)
+  }
+
   function pause(): void {
     if (status.value !== 'running') return
     if (rafId !== null) cancelAnimationFrame(rafId)
@@ -82,6 +119,7 @@ export function useTimer() {
     status,
     formatted,
     start,
+    startWithEndAt,
     pause,
     reset,
     setDuration,

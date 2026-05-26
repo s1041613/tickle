@@ -15,6 +15,20 @@ const props = defineProps<{
   finalSound: SoundKey
   playSound: (kind: SoundKey) => void
   preloadSound?: (kind: SoundKey) => void
+  /**
+   * Viewer mode: host of the room is someone else. The panel still
+   * renders (so viewers can SEE the settings) but all interactive
+   * controls are disabled and `+ 新增警告` is hidden. A green hint
+   * banner explains why nothing can be changed.
+   *
+   * Per UX spec (Case B in kicked-and-disabled-state.html):
+   *   - container, SectionTags, labels, warn-row米白底框 STAY normal
+   *   - only inputs/selects/buttons/toggles get `disabled` + opacity 0.5
+   *     + saturate 0.4
+   *   - "+ 新增警告" uses display:none (not disabled) — useless buttons
+   *     shouldn't reserve space
+   */
+  readOnly?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -146,7 +160,9 @@ function onFinalPreview() {
 <template>
   <aside
     class="fixed top-5 right-5 bottom-5 w-[min(440px,92vw)] bg-white text-ink rounded-[28px] py-8 px-7 overflow-y-auto z-10 shadow-panel transition-transform duration-300 ease-out"
+    :class="{ 'is-readonly': readOnly }"
     :style="open ? 'transform: translateX(0)' : 'transform: translateX(calc(100% + 1.5rem))'"
+    :aria-label="readOnly ? '計時器設定（唯讀）' : '計時器設定'"
   >
     <div class="flex items-center justify-between mb-7">
       <h2 class="text-2xl font-extrabold">計時器設定</h2>
@@ -157,6 +173,18 @@ function onFinalPreview() {
       >
         ×
       </button>
+    </div>
+
+    <!-- Viewer hint banner — explains the disabled controls so they
+         don't read as a broken UI. Green left-rule echoes the success
+         palette without screaming. -->
+    <div
+      v-if="readOnly"
+      class="viewer-hint mb-[0.85rem] px-[0.7rem] py-[0.55rem] rounded-[10px] text-[0.72rem] font-semibold leading-[1.5]"
+      role="status"
+    >
+      <strong>👁 唯讀模式</strong><br />
+      設定由 host 控制，這裡只能看不能改。
     </div>
 
     <SectionTag>基本</SectionTag>
@@ -170,6 +198,8 @@ function onFinalPreview() {
           class="chip"
           :class="{ active: isActive(preset.seconds) }"
           type="button"
+          :disabled="readOnly"
+          :aria-disabled="readOnly || undefined"
           @click="selectPreset(preset.seconds)"
         >
           {{ preset.label }}
@@ -204,7 +234,10 @@ function onFinalPreview() {
       @drop="onCardDrop"
       @dragend="onCardDragEnd"
     />
+    <!-- "+ 新增警告" hidden (NOT disabled) in viewer mode — a button that
+         only renders to look broken doesn't belong on the layout. -->
     <button
+      v-if="!readOnly"
       @click="addWarning"
       class="w-full py-[0.95rem] border-2 border-dashed border-[#D9CFC4] bg-transparent rounded-[20px] cursor-pointer font-bold text-muted text-[0.95rem] hover:border-orange hover:text-orange hover:bg-orange-soft transition-colors"
     >
@@ -247,6 +280,17 @@ function onFinalPreview() {
     </button>
   </aside>
 </template>
+
+<!-- NOTE: this <style> block is intentionally NOT scoped because the
+     `.is-readonly` rule needs to reach deeply nested descendants in
+     ToggleSwitch / WarningCard / DurationHmsInput / select / input
+     elements that are inside subcomponents. With `scoped` those
+     selectors would not match across component boundaries.
+
+     The selectors are namespaced under `.is-readonly` so they only
+     apply when the panel is in viewer mode — no cross-contamination
+     with the rest of the app. -->
+
 
 <style scoped>
 .preset-chips {
@@ -300,3 +344,46 @@ function onFinalPreview() {
   padding: 0.7rem 0.7rem;
 }
 </style>
+
+<!-- Unscoped because the descendant selectors must reach into child
+     components (ToggleSwitch / WarningCard / DurationHmsInput).
+     Namespaced under `.is-readonly` so they don't leak out. -->
+<style>
+.is-readonly .viewer-hint {
+  background: #EAF4EF;
+  border-left: 3px solid #4CAF74;
+  color: #2C6444;
+}
+
+/* Gray every interactive descendant — input, select, button (including
+ * ToggleSwitch's <button>), all of WarningCard's controls, the chip
+ * presets, the cta-done, etc. Per UX spec: container, SectionTag,
+ * labels stay normal; only the controls themselves get dimmed. */
+.is-readonly input,
+.is-readonly select,
+.is-readonly button {
+  opacity: 0.5;
+  filter: saturate(0.4);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Exception: the panel's own close (×) button stays clickable — the
+ * viewer is allowed to dismiss the panel. */
+.is-readonly > div:first-child > button[aria-label="關閉"] {
+  opacity: 1;
+  filter: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Exception: `✓ 設定完成` also stays clickable because it just closes
+ * the panel — no settings actually change. */
+.is-readonly .cta-done {
+  opacity: 1;
+  filter: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+</style>
+
