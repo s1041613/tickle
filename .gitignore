@@ -10,3 +10,12 @@ dist-ssr
 *.log
 
 mockups/*
+
+# PartyKit dev runtime
+.partykit/
+
+# Playwright artifacts
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
