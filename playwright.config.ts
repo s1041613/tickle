@@ -32,6 +32,9 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    launchOptions: {
+      slowMo: process.env.PW_SLOW ? Number(process.env.PW_SLOW) : 0,
+    },
   },
   projects: [
     {
