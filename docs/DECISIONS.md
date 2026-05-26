@@ -8,7 +8,9 @@
 
 ## 1. 已被評估與排除的方案
 
-### URL 設定儲存：為什麼用明碼參數而非 hash + 壓縮？
+### URL 設定儲存：為什麼用明碼參數而非 hash + 壓縮？ [DEPRECATED 2026-05-25]
+
+> ⚠️ **這條已被「Room-based mode」取代**（見下一節）。MVP 那輪選了「URL = 完整 state」，是因為當時沒有 backend；引入 PartyKit 後 URL 變成 room 指針、state 存 server，下面這個決策邏輯只有歷史價值。**新接手不用照 follow，照「Room-based mode」走。**
 
 | 方案 | 為何不選 |
 |------|---------|
@@ -17,6 +19,55 @@
 | 後端 preset 服務 | 純前端應用，不引入 backend |
 
 **目前的明碼方案**只有「URL 變長」一個缺點。當你開始用 5+ 個警告或自訂 hex 顏色時，再考慮升級到 hash + 壓縮（漸進式增強，不需重寫）。
+
+---
+
+### Room-based mode：URL 是 room 指針、不是 state 容器（2026-05-25 翻案）
+
+引入 PartyKit 後整個 URL 哲學翻轉：URL 從「**完整 state 容器**」降級成「**指向 server 上 room 的指針**」。
+
+**為什麼翻案：**
+
+| 維度 | 舊：URL = state | 新：URL = room 指針 |
+|---|---|---|
+| 跨裝置 | 只能同步「設定」、無法同步「正在跑中」 | host 按開始，所有 viewer 0.5 秒內看到，誤差 < 200ms |
+| URL 長度 | 50–150 字元 | 50 字元以內 |
+| 口頭傳遞 | 不可能（一長串 URL 念不出來）| `tickle.app/?room=k7m3p9` 可念出 |
+| 商業化路徑 | 卡在「URL 必須能儲存所有設定」假設 | server 有 state、可加付費 / 持久 / 帳號綁定 |
+| 純前端零成本 | ✅ 完全離線 | ❌ 進站就要連 server |
+
+**取捨**：放棄「純前端、離線可用、URL 完整 backup」這三件事，換取「即時跨裝置 sync + URL 可口頭分享 + 未來可商業化」。Tickle 的核心情境（公開展示計時器、現場直播倒數）需要前者；離線 backup 不是核心需求。
+
+**Legacy URL 相容路徑保留**：舊版的 `?seconds=300&warn=60:yellow:chime&final=gong` 仍可進站，被當作新 room 的初始設定 seed；server 建好 room 後 client 用 `history.replaceState` 把舊 params 清掉、只留 `?room=<id>&host=<token>`。**這是相容黑魔法、不是長期 API**——之後完全不寫舊 params。
+
+**Room ID 防撞策略：client retry（不是 server retry）**
+
+PartyKit 每個 ID 對應一個獨立 Durable Object instance，server 端只能看到「我這個 ID 的 storage 有沒有東西」。所以：
+1. Client 抽 6 位英數 ID（31 字元集）
+2. 用 `?intent=create` 開 WebSocket 連 server
+3. Server 看 storage：空 → 建 room、回 hydrate；已有 state → 回 `error: forbidden detail=room-already-exists` + close
+4. Client 收到後重新抽 ID、重連，最多 5 次
+
+樂觀建立 + server 拒絕，比中心化 ID dispenser 簡單一個量級。6 位 31 字元集 ≈ 887M 種、5 次 retry 的失敗機率小到可忽略。
+
+**Host token：URL 持有就是 host，無 token 就是 viewer**
+
+- Host token 格式 `ht_` + 16 位英數（≈ 8 × 10²⁴ 種，不可能撞 / 不可能猜）
+- URL 有 `host=` 就是 host、可送 patch；URL 沒 `host=` 就是 viewer、UI 唯讀
+- **單一活躍 host 連線**：同 token 同時只能一條 WebSocket；新 host 連進來時 server 對舊 conn 送 `kicked` 並 close 它。reload 路徑不會誤觸（自然 close → onClose 把 activeHostConnId 設回 null）
+- **Stale host conn 防護**：token 對也不夠，conn id 也要等於 `activeHostConnId` 才能寫；防止 kicked 之後尚未 close 的 stale tab 偷送 patch
+
+**為什麼不做雙向協作（任何人都可控）**：核心情境是「演講者控制端 / 觀眾顯示端」，主控模式刻意設計：完全消除「衝突」（只有一個寫入者）、未來付費可清楚定價、被 zoe 直接否決雙向。
+
+**Client 不做 server-side tick、不打高頻訊息**：
+- Server 只在「狀態變化」時 broadcast（start / pause / reset / 設定變動）
+- Tick 在 client 本機用 `Date.now() + clockOffset` 算 `remaining = endAtMs - serverNow`，rAF 60fps 渲染
+- 時鐘校正用 NTP-style 4-timestamp（T1/T2/T3/T4）+ 3 次中位數，連線 + visibility=visible 時量
+- 對成本敏感：Cloudflare DO duration billing + outgoing message。1 room 10 viewer × event-based ~10 條/操作 vs server-tick 100 條/秒 = 1000 倍差距
+
+**Room 生命週期：永不主動清理**（MVP）。每個 room ~1KB、Cloudflare KV 免費 5GB，撐很久。規模到（同時 > 10 萬活躍）再加 30 天閒置過期。
+
+詳細決策與替代方案見 `openspec/changes/add-room-sync/design.md` + `proposal.md`。實作見 `party/server.ts` + `src/composables/useRoomSync.ts`。
 
 ---
 
@@ -245,7 +296,7 @@ Vitest 跟 Vite 共用 transform pipeline，TypeScript 解析、Vue SFC 處理�
 | **時長預設 chips（5/10/15/30 分鐘）** | 同上，第二期加。MVP 用面板手動填 |
 | **UI 自動隱藏**（3 秒不動淡出） | TED 計時器有的進階功能。iPad 公開展示時很有用，**之後加** |
 | **PWA / manifest / 加到主畫面** | MVP 用一般網址。如果使用者真的常用、再 promote 成 PWA |
-| **localStorage 偏好記憶** | 整個設計是「URL 包含所有狀態」，加 localStorage 反而會有「URL vs storage 衝突」問題 |
+| **localStorage 偏好記憶** | 引入 Room-based mode 後 state 本來就在 server，不再依賴 URL；如果要「同一台裝置重開瀏覽器接續上次的 room」，可以在未來加 localStorage 記最近 host URL，但 MVP 不做（每次新 room 反而簡單） |
 | **元件層 / E2E 測試** | 已計畫但未做，留給 Playwright 補。**單元測試只測 composable** |
 
 ---
@@ -302,11 +353,12 @@ UI 上沒強制檢查警告里程碑的顏色順序。使用者可以設定「�
 
 如果你是剛接手這個專案的新會話：
 
-1. **先讀 README.md** 掌握架構
-2. **掃這份 DECISIONS.md** 知道哪些路走過了
+1. **先讀 README.md** 掌握架構（含 room-sync、PartyKit Backend 章節）
+2. **掃這份 DECISIONS.md** 知道哪些路走過了（特別注意「Room-based mode」這段是新的核心決策）
 3. **看 `openspec/changes/add-vitest-tdd/`** 了解測試策略
-4. **跑 `pnpm test` 確認 33 個測試還是綠**
-5. 開始任何改動前，看一下檔案頂端的 import / `defineProps` / `defineEmits`、再動手
+4. **看 `openspec/changes/add-room-sync/`** 了解 realtime sync 整套設計
+5. **跑 `pnpm test` 確認 171 個測試還是綠 + `pnpm build` 通過**
+6. 開始任何改動前，看一下檔案頂端的 import / `defineProps` / `defineEmits`、再動手
 
 **最常見的失誤模式**：
 - 改了 `useMilestones` 的狀態轉換但沒跑測試 → 測試會抓到
